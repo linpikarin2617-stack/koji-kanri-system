@@ -1,0 +1,3457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工事管理システム</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Meiryo',sans-serif;background:#f0f4f8;color:#333;font-size:14px}
+:root{--primary:#1a5276;--accent:#2980b9;--success:#27ae60;--warning:#f39c12;--danger:#e74c3c;--light:#ecf0f1;--border:#bdc3c7}
+#top-nav{background:var(--primary);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+#top-nav h1{font-size:18px;font-weight:bold;white-space:nowrap}
+#nav-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.nav-btn{background:rgba(255,255,255,.1);color:#fff;border:none;padding:7px 14px;border-radius:4px;cursor:pointer;font-size:13px;transition:.2s;white-space:nowrap}
+.nav-btn:hover{background:rgba(255,255,255,.25)}
+.nav-btn.active{background:#fff;color:var(--primary);font-weight:bold}
+.page{display:none;padding:20px;max-width:1200px;margin:0 auto}
+.page.active{display:block}
+.card{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.1);padding:20px;margin-bottom:16px}
+.card-title{font-size:16px;font-weight:bold;color:var(--primary);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--accent)}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;color:#666;font-weight:bold}
+.form-group input,.form-group select,.form-group textarea{border:1px solid var(--border);border-radius:4px;padding:7px 10px;font-size:13px;font-family:inherit;transition:.15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(41,128,185,.15)}
+.form-group textarea{resize:vertical;min-height:60px}
+.btn{padding:8px 18px;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;font-weight:bold;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#1f6fa1}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{background:#1e8449}
+.btn-warning{background:var(--warning);color:#fff}.btn-warning:hover{background:#d68910}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#cb4335}
+.btn-light{background:var(--light);color:#333;border:1px solid var(--border)}.btn-light:hover{background:#d5dbdb}
+.btn-sm{padding:5px 10px;font-size:12px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+table th{background:var(--primary);color:#fff;padding:9px 12px;text-align:left;white-space:nowrap}
+table td{padding:8px 12px;border-bottom:1px solid #e8e8e8;vertical-align:middle}
+table tr:hover td{background:#f5faff}
+table .num{text-align:right}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold}
+.badge-blue{background:#d6eaf8;color:#1a5276}
+.badge-green{background:#d5f5e3;color:#1e8449}
+.badge-yellow{background:#fef9e7;color:#7d6608}
+.badge-red{background:#fadbd8;color:#922b21}
+.badge-gray{background:#f2f3f4;color:#555}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{background:#fff;border-radius:8px;padding:16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.1);border-top:4px solid var(--accent)}
+.stat-card .val{font-size:28px;font-weight:bold;color:var(--primary)}
+.stat-card .lbl{font-size:12px;color:#888;margin-top:4px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.toolbar-right{margin-left:auto;display:flex;gap:8px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:8px;padding:24px;width:90%;max-width:780px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-title{font-size:17px;font-weight:bold;color:var(--primary);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--accent)}
+.modal-footer{margin-top:16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid #eee;padding-top:14px}
+.line-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.line-table th{background:#eaf2ff;color:var(--primary);padding:7px 8px;border:1px solid #c8d8eb;white-space:nowrap}
+.line-table td{padding:5px 6px;border:1px solid #dde;vertical-align:middle}
+.line-table input{border:none;width:100%;padding:4px 6px;background:transparent;font-size:13px;font-family:inherit}
+.line-table input:focus{outline:1px solid var(--accent);background:#f0f8ff}
+.line-table .del-btn{background:none;border:none;cursor:pointer;color:#e74c3c;font-size:16px;padding:2px 6px}
+.total-row{background:#f0f8e8;font-weight:bold}
+.progress-bar{background:#e8e8e8;border-radius:4px;height:8px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:4px;background:var(--success);transition:.3s}
+.progress-fill.warn{background:var(--warning)}
+.progress-fill.danger{background:var(--danger)}
+@media print{
+  #top-nav,#modal-area,.no-print{display:none!important}
+  .page{display:block!important;padding:0;margin:0}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  body{background:#fff}
+}
+/* ===== 受賞履歴 ===== */
+.award-card{background:#fff;border:1px solid #e8d880;border-radius:6px;padding:10px 12px;margin-bottom:8px;position:relative}
+.award-card:last-child{margin-bottom:0}
+.award-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.award-num{background:#f5e070;color:#5a4000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;flex-shrink:0}
+.award-del{position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:#c0392b;font-size:16px;line-height:1;padding:2px 4px}
+.award-del:hover{color:#e74c3c}
+.award-type-sel{border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:12px;font-weight:bold;cursor:pointer;background:#fff}
+.award-employee{display:none}
+.award-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.award-row.single{grid-template-columns:1fr}
+.award-field{display:flex;flex-direction:column;gap:3px}
+.award-field label{font-size:11px;color:#888;font-weight:bold}
+.award-field input,.award-field textarea{border:1px solid #ddd;border-radius:4px;padding:5px 8px;font-size:12px;font-family:inherit;width:100%}
+.award-field input:focus,.award-field textarea:focus{outline:none;border-color:var(--warning);box-shadow:0 0 0 2px rgba(243,156,18,.15)}
+.award-field textarea{resize:vertical;min-height:44px}
+.award-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:bold}
+.award-badge-corp{background:#d6eaf8;color:#1a5276}
+.award-badge-emp{background:#fdebd0;color:#784212}
+.award-pdf-area{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}
+.award-pdf-name{font-size:12px;color:#555;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ===== コリンズ機能 ===== */
+.corins-upload-area{border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:.2s;background:#fafcff;margin-bottom:16px}
+.corins-upload-area:hover,.corins-upload-area.drag-over{border-color:var(--accent);background:#eaf4ff}
+.corins-upload-area .upload-icon{font-size:36px;margin-bottom:8px}
+.corins-upload-area p{color:#888;font-size:13px;margin-top:4px}
+.corins-upload-area strong{color:var(--primary)}
+.corins-grid{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.corins-item{display:flex;align-items:center;gap:10px;background:#f8faff;border:1px solid #d0e0f5;border-radius:6px;padding:8px 12px;transition:.15s}
+.corins-item:hover{background:#eaf4ff;border-color:var(--accent)}
+.corins-item .ci-icon{font-size:22px;flex-shrink:0}
+.corins-item .ci-info{flex:1;min-width:0}
+.corins-item .ci-name{font-size:13px;font-weight:bold;color:var(--primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.corins-item .ci-date{font-size:11px;color:#888;margin-top:2px}
+.corins-item .ci-num{font-size:11px;color:#aaa;flex-shrink:0;min-width:30px;text-align:right}
+.corins-item .ci-open{background:#eaf4ff;color:var(--accent);border:1px solid #aad4f0;border-radius:4px;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:bold}
+.corins-item .ci-open:hover{background:#d0eaff}
+.corins-item .ci-del{background:none;border:none;cursor:pointer;color:#e74c3c;font-size:16px;padding:2px 6px;flex-shrink:0}
+.corins-item .ci-del:hover{color:#c0392b}
+.corins-count-badge{display:inline-flex;align-items:center;gap:3px;background:#eaf4ff;color:var(--accent);border-radius:10px;padding:2px 7px;font-size:11px;font-weight:bold;margin-left:4px}
+/* 旧ビューアー（PDF版では不要だが残す） */
+.corins-viewer-overlay{display:none}
+.corins-viewer-overlay.open{display:none}
+/* ===== 承認ステータス ===== */
+.apv-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:bold;white-space:nowrap;cursor:pointer;border:1px solid transparent;transition:.15s}
+.apv-chip:hover{opacity:.8}
+.apv-未提出{background:#f2f3f4;color:#666;border-color:#ddd}
+.apv-提出済み{background:#d6eaf8;color:#1a5276;border-color:#aad4f0}
+.apv-承認済み{background:#d5f5e3;color:#1e8449;border-color:#a9dfbf}
+.apv-差し戻し{background:#fadbd8;color:#922b21;border-color:#f5b7b1}
+.apv-grid{display:flex;flex-direction:column;gap:3px;min-width:100px}
+.apv-row{display:flex;align-items:center;gap:4px;font-size:11px}
+.apv-label{color:#888;min-width:52px;flex-shrink:0}
+.apv-section{background:#f8faff;border:1px solid #d0e0f5;border-radius:6px;padding:10px 14px;margin-bottom:12px}
+.apv-section-title{font-size:13px;font-weight:bold;color:var(--primary);margin-bottom:8px}
+</style>
+</head>
+<body>
+<div id="top-nav">
+  <h1>🏗 工事管理システム</h1>
+  <div id="nav-tabs">
+    <button class="nav-btn active" onclick="showPage('dashboard',event)">ダッシュボード</button>
+    <button class="nav-btn" onclick="showPage('koji-list',event)">工事台帳</button>
+    <button class="nav-btn" onclick="showPage('yosan',event)">実行予算書</button>
+    <button class="nav-btn" onclick="showPage('mitsumori',event)">見積書</button>
+    <button class="nav-btn" onclick="showPage('gaichuu',event)">外注依頼書</button>
+    <button class="nav-btn" onclick="showPage('chumon',event)">注文書</button>
+    <button class="nav-btn" onclick="showPage('genka',event)">原価管理</button>
+    <button class="nav-btn" onclick="showPage('seisan',event)">精算書</button>
+    <button class="nav-btn" onclick="showPage('settings',event)">⚙ 設定</button>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+    <button class="btn" onclick="exportData()"
+      style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:6px 12px;font-size:12px;white-space:nowrap">
+      💾 データ保存
+    </button>
+    <label class="btn"
+      style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap;margin:0">
+      📂 データ読込
+      <input type="file" accept=".json" onchange="importData(this)" style="display:none">
+    </label>
+  </div>
+</div>
+<!-- ダッシュボード -->
+<div id="page-dashboard" class="page active">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;background:#fff;padding:14px 20px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.1)">
+    <button class="btn btn-light" onclick="changeDashYear(-1)" style="font-size:16px;padding:6px 14px">◀</button>
+    <div style="text-align:center;min-width:240px">
+      <div id="dash-year-label" style="font-size:20px;font-weight:bold;color:var(--primary)"></div>
+      <div id="dash-year-range" style="font-size:12px;color:#888"></div>
+    </div>
+    <button class="btn btn-light" onclick="changeDashYear(1)" style="font-size:16px;padding:6px 14px">▶</button>
+    <button class="btn btn-light btn-sm" onclick="currentViewYear=getCurrentFiscalYear();renderDashboard()" style="margin-left:8px">今年度</button>
+    <div style="margin-left:auto;font-size:13px;color:#555">
+      <span style="background:#fef3e2;border:1px solid #f0a500;border-radius:4px;padding:3px 10px;font-weight:bold">繰越工事は翌年度に自動表示されます</span>
+    </div>
+  </div>
+  <div class="stats-grid" id="dash-stats"></div>
+  <div class="card">
+    <div class="card-title" id="dash-table-title">工事一覧</div>
+    <div class="tbl-wrap">
+      <table id="dash-table">
+        <thead><tr>
+          <th>工事番号</th><th>工事名</th><th>発注者</th>
+          <th>請負金額（現在）</th><th>変更</th><th>点数</th>
+          <th>予算消化率</th><th>完工予定日（現在）</th><th>状態</th>
+        </tr></thead>
+        <tbody id="dash-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- 工事台帳 -->
+<div id="page-koji-list" class="page">
+  <div class="card">
+    <div class="card-title">工事台帳</div>
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openKojiModal()">＋ 新規工事登録</button>
+      <div style="display:flex;align-items:center;gap:6px;background:#f0f4f8;border-radius:6px;padding:4px 10px">
+        <button class="btn btn-light btn-sm" onclick="changeListYear(-1)">◀</button>
+        <span id="list-year-label" style="font-weight:bold;color:var(--primary);min-width:180px;text-align:center;font-size:13px"></span>
+        <button class="btn btn-light btn-sm" onclick="changeListYear(1)">▶</button>
+        <button class="btn btn-light btn-sm" onclick="currentViewYear=getCurrentFiscalYear();renderKojiList()">今年度</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+        <input type="checkbox" id="list-all-years" onchange="renderKojiList()" style="width:15px;height:15px">
+        全年度表示
+      </label>
+      <input type="text" id="koji-search" placeholder="工事名・番号で検索…" oninput="renderKojiList()" style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;width:200px">
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>工事番号</th><th>工事名</th><th>発注者</th>
+          <th>請負金額（現在）</th><th>変更</th><th>点数</th>
+          <th>着工日</th><th>完工予定日（現在）</th>
+          <th>監理技術者</th><th>状態</th><th>書類承認</th><th>操作</th>
+        </tr></thead>
+        <tbody id="koji-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- 実行予算書 -->
+<div id="page-yosan" class="page">
+  <div class="card">
+    <div class="card-title">実行予算書</div>
+    <div class="toolbar">
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+        <label style="white-space:nowrap">工事選択：</label>
+        <select id="yosan-koji-sel" onchange="loadYosan()" style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;min-width:240px">
+          <option value="">-- 工事を選択 --</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-success" onclick="saveYosan()">💾 保存</button>
+        <button class="btn btn-light" onclick="printYosan()">🖨 印刷</button>
+        <button class="btn btn-light" id="yosan-apv-btn" onclick="openApvForCurrentKoji('yosan')" style="border-color:#1a5276;color:#1a5276" title="承認ステータスを変更">📋 承認</button>
+      </div>
+    </div>
+    <div id="yosan-content" style="display:none">
+      <!-- 工事基本情報 -->
+      <div class="form-row">
+        <div class="form-group"><label>工事番号</label><input id="y-no" readonly style="background:#f5f5f5"></div>
+        <div class="form-group"><label>工事名</label><input id="y-name" readonly style="background:#f5f5f5"></div>
+        <div class="form-group"><label>発注者</label><input id="y-client" readonly style="background:#f5f5f5"></div>
+        <div class="form-group"><label>請負金額（税込）</label><input id="y-ukeoikin" readonly style="background:#f5f5f5"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="form-group"><label>現場所在地</label><input id="y-addr" readonly style="background:#f5f5f5"></div>
+        <div class="form-group"><label>着工日</label><input id="y-start" readonly style="background:#f5f5f5"></div>
+        <div class="form-group"><label>完工予定日</label><input id="y-end" readonly style="background:#f5f5f5"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="form-group"><label>監理技術者</label><input id="y-tanto" readonly style="background:#f5f5f5"></div>
+        <div class="form-group"><label>現場代理人</label><input id="y-dairi" readonly style="background:#f5f5f5"></div>
+        <div class="form-group"><label>担当</label><input id="y-tantou" readonly style="background:#f5f5f5"></div>
+      </div>
+      <!-- 版管理 -->
+      <div style="background:#f0f4ff;border:1px solid #c0d0f5;border-radius:6px;padding:12px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <strong style="color:var(--primary);white-space:nowrap">📋 版管理</strong>
+          <select id="y-version-sel" onchange="switchYosanVersion()" style="padding:5px 10px;border:1px solid var(--border);border-radius:4px;min-width:180px;font-size:13px"></select>
+          <button class="btn btn-primary btn-sm" onclick="addYosanVersion()">＋ 新版を作成</button>
+          <button class="btn btn-danger btn-sm" id="y-del-ver-btn" onclick="deleteYosanVersion()">版を削除</button>
+          <button class="btn btn-light btn-sm" id="y-diff-btn" onclick="openYosanDiff()" style="border-color:var(--primary);color:var(--primary)" disabled>📊 前版と比較</button>
+          <span id="y-version-count" style="font-size:12px;color:#888"></span>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>版名</label><input id="y-rev" placeholder="第1版" oninput="updateYosanVersionMeta()"></div>
+          <div class="form-group"><label>作成日</label><input type="date" id="y-date" oninput="updateYosanVersionMeta()"></div>
+          <div class="form-group"><label>作成者</label><input id="y-author" placeholder="担当者名" oninput="updateYosanVersionMeta()"></div>
+          <div class="form-group"><label>変更理由・備考</label><input id="y-note" placeholder="変更内容の概要" oninput="updateYosanVersionMeta()"></div>
+        </div>
+      </div>
+      <!-- 工事説明欄 -->
+      <div style="background:#f8f9ff;border:1px solid #d0d8f0;border-radius:6px;padding:12px;margin-bottom:14px">
+        <strong style="color:var(--primary);font-size:13px">📝 工事説明</strong>
+        <div style="margin-top:8px">
+          <textarea id="y-description" rows="3" placeholder="工事の概要・施工条件・特記事項などを入力…" oninput="updateYosanVersionMeta()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:7px 10px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+      </div>
+      <!-- 外注予定先 -->
+      <div style="background:#fff8f0;border:1px solid #f0c080;border-radius:6px;padding:12px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="color:#7d4a00;font-size:13px">🏢 外注予定先</strong>
+          <button class="btn btn-warning btn-sm" onclick="addGaichuuYotei()">＋ 追加</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="line-table" id="gaichuu-yotei-table">
+            <thead><tr>
+              <th>会社名</th>
+              <th>主な工種</th>
+              <th style="width:36px"></th>
+            </tr></thead>
+            <tbody id="gaichuu-yotei-lines"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- 工事進捗予定 -->
+      <div style="background:#f0fff8;border:1px solid #80d5a0;border-radius:6px;padding:12px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="color:#1e6b3a;font-size:13px">📅 工事進捗予定</strong>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-success btn-sm" onclick="addProgressSchedule()">＋ 月追加</button>
+            <button class="btn btn-success btn-sm" onclick="addProgressSchedule12()" style="background:#2e7d52">＋ 12か月一括</button>
+            <button class="btn btn-sm" onclick="clearProgressSchedule()" style="background:#e0e0e0;color:#666;border:1px solid #ccc">クリア</button>
+          </div>
+        </div>
+        <div id="progress-sched-wrap" style="overflow-x:auto"></div>
+      </div>
+      <!-- 行追加コントロール -->
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;background:#f8f8f8;padding:8px 12px;border-radius:6px;border:1px solid #e8e8e8">
+        <span style="font-size:13px;font-weight:bold;color:#555;white-space:nowrap">行追加：</span>
+        <select id="y-add-cat" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:13px">
+          <option value="直接工事費">直接工事費</option>
+          <option value="共通仮設費">共通仮設費</option>
+        </select>
+        <input id="y-add-koushu" placeholder="工種名（例：土工）" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;width:175px">
+        <button class="btn btn-primary btn-sm" onclick="addYosanLine()">＋ 行追加</button>
+      </div>
+      <!-- 予算テーブル -->
+      <div class="tbl-wrap">
+        <table class="line-table" id="yosan-table">
+          <thead><tr>
+            <th style="width:90px">工種</th>
+            <th style="width:100px">種別</th>
+            <th>摘要</th>
+            <th style="width:72px">数量</th>
+            <th style="width:52px">単位</th>
+            <th style="width:100px">単価</th>
+            <th style="width:110px">金額</th>
+            <th style="width:52px">構成%</th>
+            <th style="width:36px"></th>
+          </tr></thead>
+          <tbody id="yosan-lines"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 見積書 -->
+<div id="page-mitsumori" class="page">
+  <div class="card">
+    <div class="card-title">見積書</div>
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openMitsumoriModal()">＋ 新規見積作成</button>
+      <select id="mitsumori-koji-filter" onchange="renderMitsumoriList()" style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;min-width:200px">
+        <option value="">全工事</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>見積番号</th><th>工事名</th><th>宛先</th><th>件名</th>
+          <th>見積金額</th><th>見積日</th><th>有効期限</th><th>状態</th><th>承認</th><th>操作</th>
+        </tr></thead>
+        <tbody id="mitsumori-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- 外注依頼書 -->
+<div id="page-gaichuu" class="page">
+  <div class="card">
+    <div class="card-title">外注依頼書</div>
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openGaichuuModal()">＋ 新規外注依頼作成</button>
+      <select id="gaichuu-koji-filter" onchange="renderGaichuuList()" style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;min-width:200px">
+        <option value="">全工事</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>依頼番号</th><th>工事名</th><th>外注業者</th><th>工種</th>
+          <th>依頼金額</th><th>依頼日</th><th>作業期間</th><th>状態</th><th>承認</th><th>操作</th>
+        </tr></thead>
+        <tbody id="gaichuu-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- 注文書 -->
+<div id="page-chumon" class="page">
+  <div class="card">
+    <div class="card-title">注文書</div>
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openChumonModal()">＋ 新規注文書作成</button>
+      <select id="chumon-koji-filter" onchange="renderChumonList()" style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;min-width:200px">
+        <option value="">全工事</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>注文番号</th><th>工事名</th><th>注文先</th><th>品目</th>
+          <th>注文金額</th><th>注文日</th><th>変更</th><th>状態</th><th>承認</th><th>操作</th>
+        </tr></thead>
+        <tbody id="chumon-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- 原価管理 -->
+<div id="page-genka" class="page">
+  <div class="card">
+    <div class="card-title">原価管理</div>
+    <div class="toolbar">
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+        <label>工事選択：</label>
+        <select id="genka-koji-sel" onchange="loadGenka()" style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;min-width:240px">
+          <option value="">-- 工事を選択 --</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-success" onclick="saveGenka()">💾 保存</button>
+        <button class="btn btn-light" onclick="printGenka()">🖨 印刷</button>
+        <button class="btn btn-light" id="genka-apv-btn" onclick="openApvForCurrentKoji('genka')" style="border-color:#1a5276;color:#1a5276" title="承認ステータスを変更">📋 承認</button>
+      </div>
+    </div>
+    <div id="genka-content" style="display:none">
+      <div class="form-row" style="margin-bottom:16px">
+        <div class="stat-card"><div class="val" id="gc-ukeoi">0</div><div class="lbl">請負金額</div></div>
+        <div class="stat-card" style="border-color:var(--warning)"><div class="val" id="gc-yosan">0</div><div class="lbl">実行予算</div></div>
+        <div class="stat-card" style="border-color:var(--success)"><div class="val" id="gc-jisseki">0</div><div class="lbl">実績原価</div></div>
+        <div class="stat-card" style="border-color:var(--danger)"><div class="val" id="gc-nokori">0</div><div class="lbl">残予算</div></div>
+        <div class="stat-card" style="border-color:#9b59b6"><div class="val" id="gc-rieki">0</div><div class="lbl">粗利益（見込）</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>原価実績入力</strong>
+        <button class="btn btn-primary btn-sm" onclick="addGenkaLine()">＋ 行追加</button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="line-table">
+          <thead><tr>
+            <th>費目</th><th>摘要</th><th>業者・仕入先</th>
+            <th style="width:110px">予算額</th><th style="width:110px">実績額</th>
+            <th style="width:110px">差異</th><th style="width:80px">進捗%</th>
+            <th>伝票番号</th><th>計上日</th><th style="width:36px"></th>
+          </tr></thead>
+          <tbody id="genka-lines"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 精算書 -->
+<div id="page-seisan" class="page">
+  <div class="card">
+    <div class="card-title">精算書</div>
+    <div class="toolbar">
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+        <label>工事選択：</label>
+        <select id="seisan-koji-sel" onchange="loadSeisan()" style="padding:7px 12px;border:1px solid var(--border);border-radius:4px;min-width:240px">
+          <option value="">-- 工事を選択 --</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-success" onclick="saveSeisan()">💾 保存</button>
+        <button class="btn btn-light" onclick="printSeisan()">🖨 印刷</button>
+        <button class="btn btn-light" id="seisan-apv-btn" onclick="openApvForCurrentKoji('seisan')" style="border-color:#1a5276;color:#1a5276" title="承認ステータスを変更">📋 承認</button>
+      </div>
+    </div>
+    <div id="seisan-content" style="display:none">
+      <div class="form-row">
+        <div class="form-group"><label>工事番号</label><input id="s-no" readonly style="background:#f5f5f5"></div>
+        <div class="form-group"><label>工事名</label><input id="s-name" readonly style="background:#f5f5f5"></div>
+        <div class="form-group"><label>精算日</label><input type="date" id="s-date"></div>
+        <div class="form-group"><label>作成者</label><input id="s-author" placeholder="担当者名"></div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="card" style="flex:1;min-width:200px;padding:14px">
+          <div style="font-size:12px;color:#888">請負金額（税込）</div>
+          <div style="font-size:22px;font-weight:bold;color:var(--primary)" id="s-ukeoi">0 円</div>
+        </div>
+        <div class="card" style="flex:1;min-width:200px;padding:14px">
+          <div style="font-size:12px;color:#888">実際原価合計</div>
+          <div style="font-size:22px;font-weight:bold;color:var(--warning)" id="s-genka">0 円</div>
+        </div>
+        <div class="card" style="flex:1;min-width:200px;padding:14px">
+          <div style="font-size:12px;color:#888">精算粗利益</div>
+          <div style="font-size:22px;font-weight:bold" id="s-rieki">0 円</div>
+        </div>
+        <div class="card" style="flex:1;min-width:200px;padding:14px">
+          <div style="font-size:12px;color:#888">粗利益率</div>
+          <div style="font-size:22px;font-weight:bold" id="s-rate">0%</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>精算内訳明細</strong>
+        <button class="btn btn-primary btn-sm" onclick="addSeisanLine()">＋ 行追加</button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="line-table">
+          <thead><tr>
+            <th>費目</th><th>摘要</th><th>業者名</th>
+            <th style="width:110px">実行予算</th><th style="width:110px">実績金額</th>
+            <th style="width:110px">増減額</th><th>備考</th><th style="width:36px"></th>
+          </tr></thead>
+          <tbody id="seisan-lines"></tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3" style="text-align:right;padding:8px 12px">合計</td>
+              <td class="num" id="s-yosan-total" style="padding:8px 12px">0</td>
+              <td class="num" id="s-jisseki-total" style="padding:8px 12px">0</td>
+              <td class="num" id="s-diff-total" style="padding:8px 12px">0</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="form-row" style="margin-top:16px">
+        <div class="form-group"><label>特記事項・所見</label><textarea id="s-note" rows="3" placeholder="精算に関する特記事項を入力…"></textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 設定画面 -->
+<div id="page-settings" class="page">
+  <!-- ログインユーザー選択 -->
+  <div class="card">
+    <div class="card-title">👤 現在のユーザー</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="form-group" style="flex:1;min-width:200px">
+        <label>ログインユーザー（承認操作に使用）</label>
+        <select id="current-user-sel" onchange="onCurrentUserChange()" style="padding:8px 12px;border:1px solid var(--border);border-radius:4px;font-size:14px">
+          <option value="">-- ユーザーを選択 --</option>
+        </select>
+      </div>
+      <div id="current-user-info" style="background:#f0f4f8;border-radius:6px;padding:10px 16px;font-size:13px;min-width:180px"></div>
+    </div>
+  </div>
+
+  <!-- 社員マスタ -->
+  <div class="card">
+    <div class="card-title">👥 社員マスタ</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="openEmployeeModal()">＋ 社員追加</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>氏名</th><th>役職</th><th>メールアドレス</th><th>パスワード</th><th>操作</th>
+        </tr></thead>
+        <tbody id="employee-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 書類別承認者設定 -->
+  <div class="card">
+    <div class="card-title">📋 書類別 承認者設定</div>
+    <p style="font-size:13px;color:#666;margin-bottom:14px">書類提出時に自動でセットされる承認者を書類の種類ごとに設定します。</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>書類種類</th><th>承認者</th><th>説明</th></tr></thead>
+        <tbody id="approver-setting-tbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;text-align:right">
+      <button class="btn btn-success" onclick="saveApproverSettings()">💾 承認者設定を保存</button>
+    </div>
+  </div>
+</div>
+<!-- モーダル -->
+<div id="modal-area">
+<div class="modal-overlay" id="modal-koji">
+  <div class="modal">
+    <div class="modal-title" id="koji-modal-title">工事登録</div>
+    <input type="hidden" id="koji-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>工事番号 *</label><input id="km-no" placeholder="例：2024-001"></div>
+      <div class="form-group"><label>工事名 *</label><input id="km-name" placeholder="○○道路改良工事"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>発注者</label><input id="km-client" placeholder="発注者名"></div>
+      <div class="form-group"><label>現場所在地</label><input id="km-addr" placeholder="○○市○○町…"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>当初請負金額（税抜）</label><input id="km-price" type="text" inputmode="numeric" placeholder="0"></div>
+      <div class="form-group"><label>税率(%)</label><select id="km-tax"><option value="10">10%</option><option value="8">8%</option><option value="0">0%</option></select></div>
+      <div class="form-group"><label>当初請負金額（税込）</label><input id="km-price-tax" readonly style="background:#f5f5f5"></div>
+    </div>
+    <div style="background:#f8faff;border:1px solid #d0e0f5;border-radius:6px;padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:13px;color:var(--primary)">📋 変更履歴（変更契約・工期変更）</strong>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button type="button" class="btn btn-sm" style="background:#e8f0ff;color:#1a5276;border:1px solid #aac0f0" onclick="openContractPdfModal('orig','原契約書')">📄 原契約書</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="addContractChange()">＋ 変更契約追加</button>
+          <button type="button" class="btn btn-success btn-sm" onclick="addPeriodChange()">＋ 工期変更追加</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="line-table">
+          <thead><tr>
+            <th style="width:56px">変更No</th>
+            <th style="width:72px">種別</th>
+            <th style="width:110px">変更日</th>
+            <th style="width:140px">変更後金額（税込）</th>
+            <th style="width:135px">変更後完工予定日</th>
+            <th style="width:150px">増減額 / 当初比</th>
+            <th>変更理由・摘要</th>
+            <th style="width:60px">契約書</th>
+            <th style="width:36px"></th>
+          </tr></thead>
+          <tbody id="all-changes-tbody"></tbody>
+        </table>
+      </div>
+      <div style="font-size:12px;color:#555;margin-top:6px;display:flex;gap:20px;flex-wrap:wrap">
+        <span>最新請負金額（税込）：<span id="km-latest-price" style="font-weight:bold;color:var(--primary);font-size:14px">（変更なし）</span></span>
+        <span>現在の完工予定日：<span id="km-latest-end" style="font-weight:bold;color:#1e6b3a;font-size:14px">（変更なし）</span></span>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>着工日（当初）</label><input type="date" id="km-start"></div>
+      <div class="form-group"><label>完工予定日（当初）</label><input type="date" id="km-end"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>監理技術者</label><input id="km-tanto" placeholder="氏名"></div>
+      <div class="form-group"><label>現場代理人</label><input id="km-dairi" placeholder="氏名"></div>
+      <div class="form-group"><label>担当</label><input id="km-tantou" placeholder="担当者名"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>工事点数</label><input id="km-score" type="number" placeholder="例：65" min="0" max="100"></div>
+      <div class="form-group"><label>状態</label>
+        <select id="km-status">
+          <option value="受注">受注</option><option value="着工">着工</option>
+          <option value="施工中">施工中</option><option value="完工">完工</option>
+          <option value="精算済">精算済</option>
+        </select>
+      </div>
+      <div class="form-group" style="justify-content:flex-end">
+        <label style="cursor:pointer;display:flex;align-items:center;gap:8px;margin-top:20px">
+          <input type="checkbox" id="km-kurikoshi" style="width:18px;height:18px;cursor:pointer">
+          <span style="font-weight:bold;color:#e67e22">繰越工事</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-group"><label>備考</label><textarea id="km-note"></textarea></div>
+    <!-- 受賞履歴 -->
+    <div style="background:#fffdf0;border:1px solid #f0d080;border-radius:6px;padding:12px;margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:13px;color:#7d5a00">🏆 受賞履歴</strong>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="award-count-label" style="font-size:12px;color:#888"></span>
+          <button type="button" class="btn btn-sm" style="background:#f5e070;color:#5a4000;border:1px solid #d4b800" onclick="addAward()">＋ 受賞追加</button>
+        </div>
+      </div>
+      <div id="award-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeModal('modal-koji')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveKoji()">保存</button>
+    </div>
+  </div>
+</div>
+<!-- 見積書モーダル -->
+<div class="modal-overlay" id="modal-mitsumori">
+  <div class="modal">
+    <div class="modal-title" id="m-modal-title">見積書作成</div>
+    <input type="hidden" id="m-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>見積番号</label><input id="mm-no" placeholder="自動採番"></div>
+      <div class="form-group"><label>対象工事</label><select id="mm-koji"><option value="">-- 選択 --</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>宛先</label><input id="mm-atesaki" placeholder="御中"></div>
+      <div class="form-group"><label>件名</label><input id="mm-title" placeholder="○○工事 御見積"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>見積日</label><input type="date" id="mm-date"></div>
+      <div class="form-group"><label>有効期限</label><input type="date" id="mm-expiry"></div>
+      <div class="form-group"><label>作成者</label><input id="mm-author" placeholder="担当者名"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>お支払条件</label><input id="mm-payment" placeholder="例：翌月末払い"></div>
+      <div class="form-group"><label>状態</label>
+        <select id="mm-status"><option>提出前</option><option>提出済</option><option>承認済</option><option>却下</option></select>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px">
+      <strong>見積明細</strong><button class="btn btn-primary btn-sm" onclick="addMitsumoriLine()">＋ 行追加</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="line-table">
+        <thead><tr>
+          <th>工種・品目</th><th>摘要</th><th style="width:80px">数量</th>
+          <th style="width:60px">単位</th><th style="width:100px">単価</th>
+          <th style="width:110px">金額</th><th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="m-lines"></tbody>
+        <tfoot>
+          <tr class="total-row"><td colspan="4" style="text-align:right;padding:7px 10px">小計</td><td></td><td id="m-subtotal" class="num" style="padding:7px 10px">0</td><td></td></tr>
+          <tr><td colspan="4" style="text-align:right;padding:7px 10px">消費税(10%)</td><td></td><td id="m-tax" class="num" style="padding:7px 10px">0</td><td></td></tr>
+          <tr class="total-row"><td colspan="4" style="text-align:right;padding:7px 10px;font-size:15px">合計金額</td><td></td><td id="m-total" class="num" style="padding:7px 10px;font-size:15px;color:var(--primary)">0</td><td></td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="form-group" style="margin-top:10px"><label>備考</label><textarea id="mm-note"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeModal('modal-mitsumori')">キャンセル</button>
+      <button class="btn btn-warning btn-sm" onclick="printMitsumori()">🖨 印刷</button>
+      <button class="btn btn-primary" onclick="saveMitsumori()">保存</button>
+    </div>
+  </div>
+</div>
+<!-- 外注依頼書モーダル -->
+<div class="modal-overlay" id="modal-gaichuu">
+  <div class="modal">
+    <div class="modal-title">外注依頼書作成</div>
+    <input type="hidden" id="g-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>依頼番号</label><input id="gm-no" placeholder="自動採番"></div>
+      <div class="form-group"><label>対象工事</label><select id="gm-koji"><option value="">-- 選択 --</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>外注業者名 *</label><input id="gm-gyosha" placeholder="業者名"></div>
+      <div class="form-group"><label>工種</label><input id="gm-koushu" placeholder="例：土工、舗装工…"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>依頼日</label><input type="date" id="gm-date"></div>
+      <div class="form-group"><label>作業開始日</label><input type="date" id="gm-start"></div>
+      <div class="form-group"><label>作業完了日</label><input type="date" id="gm-end"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>作業場所</label><input id="gm-place" placeholder="現場名・住所"></div>
+      <div class="form-group"><label>担当者</label><input id="gm-tanto" placeholder="担当者名"></div>
+      <div class="form-group"><label>状態</label>
+        <select id="gm-status"><option>依頼中</option><option>承認済</option><option>作業中</option><option>完了</option><option>キャンセル</option></select>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px">
+      <strong>依頼内容明細</strong><button class="btn btn-primary btn-sm" onclick="addGaichuuLine()">＋ 行追加</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="line-table">
+        <thead><tr>
+          <th>作業内容</th><th>摘要</th><th style="width:80px">数量</th>
+          <th style="width:60px">単位</th><th style="width:100px">単価</th>
+          <th style="width:110px">金額</th><th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="g-lines"></tbody>
+        <tfoot>
+          <tr class="total-row"><td colspan="4" style="text-align:right;padding:7px 10px">依頼金額合計（税抜）</td><td></td><td id="g-total" class="num" style="padding:7px 10px">0</td><td></td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="form-group" style="margin-top:10px"><label>注意事項・備考</label><textarea id="gm-note" placeholder="安全管理上の注意点、持込機材など"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeModal('modal-gaichuu')">キャンセル</button>
+      <button class="btn btn-warning btn-sm" onclick="printGaichuu()">🖨 印刷</button>
+      <button class="btn btn-primary" onclick="saveGaichuu()">保存</button>
+    </div>
+  </div>
+</div>
+<!-- 注文書モーダル -->
+<div class="modal-overlay" id="modal-chumon">
+  <div class="modal" style="max-width:900px">
+    <div class="modal-title" id="c-modal-title">注文書作成</div>
+    <input type="hidden" id="c-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>注文番号</label><input id="cm-no" placeholder="自動採番"></div>
+      <div class="form-group"><label>対象工事</label><select id="cm-koji"><option value="">-- 選択 --</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>注文先 *</label><input id="cm-atesaki" placeholder="会社名"></div>
+      <div class="form-group"><label>品目・件名</label><input id="cm-title" placeholder="○○工事 他"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>注文日</label><input type="date" id="cm-date"></div>
+      <div class="form-group"><label>工事場所</label><input id="cm-place" placeholder="現場名・住所"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>工事期間（開始）</label><input type="date" id="cm-period-start"></div>
+      <div class="form-group"><label>工事期間（終了）</label><input type="date" id="cm-period-end"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>支払条件</label><input id="cm-payment" placeholder="翌月末払い等"></div>
+      <div class="form-group"><label>担当者</label><input id="cm-tanto" placeholder="担当者名"></div>
+      <div class="form-group"><label>状態</label>
+        <select id="cm-status"><option>発注前</option><option>発注済</option><option>納品済</option><option>検収済</option></select>
+      </div>
+    </div>
+    <!-- ★ 注文金額 大表示 -->
+    <div style="background:#eaf4ff;border:2px solid #2980b9;border-radius:8px;padding:14px 20px;margin:10px 0 14px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div style="font-size:11px;color:#666;margin-bottom:2px">当初注文金額（税込）</div>
+        <div id="cm-orig-amount-disp" style="font-size:22px;font-weight:bold;color:#555">－</div>
+      </div>
+      <div style="font-size:20px;color:#bbb">▶</div>
+      <div style="text-align:center;flex:1">
+        <div style="font-size:11px;color:#1a5276;font-weight:bold;margin-bottom:2px">現在の注文金額（税込）</div>
+        <div id="cm-cur-amount-disp" style="font-size:32px;font-weight:bold;color:#1a5276">－</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#888">当初比増減</div>
+        <div id="cm-diff-disp" style="font-size:18px;font-weight:bold;color:#888">－</div>
+      </div>
+      <div id="cm-period-chg-disp" style="display:none;border-left:2px solid #27ae60;padding-left:14px;min-width:140px">
+        <div style="font-size:11px;color:#27ae60;font-weight:bold;margin-bottom:2px">工 期 変 更</div>
+        <div id="cm-period-chg-detail" style="font-size:12px;color:#1b6a3a"></div>
+      </div>
+    </div>
+    <!-- 注文明細 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px">
+      <strong>注文明細（当初）</strong><button class="btn btn-primary btn-sm" onclick="addChumonLine()">＋ 行追加</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="line-table">
+        <thead><tr>
+          <th>品名・材料名</th><th>規格・摘要</th><th style="width:80px">数量</th>
+          <th style="width:60px">単位</th><th style="width:100px">単価</th>
+          <th style="width:110px">金額</th><th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="c-lines"></tbody>
+        <tfoot>
+          <tr class="total-row"><td colspan="4" style="text-align:right;padding:7px 10px">小計</td><td></td><td id="c-subtotal" class="num" style="padding:7px 10px">0</td><td></td></tr>
+          <tr><td colspan="4" style="text-align:right;padding:7px 10px">消費税(10%)</td><td></td><td id="c-tax" class="num" style="padding:7px 10px">0</td><td></td></tr>
+          <tr class="total-row"><td colspan="4" style="text-align:right;padding:7px 10px;font-size:15px">当初合計金額</td><td></td><td id="c-total" class="num" style="padding:7px 10px;font-size:15px;color:var(--primary)">0</td><td></td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <!-- ★ 変更履歴 -->
+    <div style="background:#f8f0ff;border:1px solid #c8a0e8;border-radius:6px;padding:12px;margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="color:#6a1b9a;font-size:13px">📋 変更履歴</strong>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="btn btn-sm" style="background:#e8d5ff;color:#6a1b9a;border:1px solid #c8a0e8" onclick="addChumonChange('amount')">＋ 金額変更</button>
+          <button type="button" class="btn btn-sm" style="background:#d5ffe8;color:#1b6a3a;border:1px solid #a0e8c8" onclick="addChumonChange('period')">＋ 工期変更</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="line-table">
+          <thead><tr>
+            <th style="width:70px">変更回</th>
+            <th style="width:80px">種別</th>
+            <th style="width:115px">変更日</th>
+            <th>金額 / 工期</th>
+            <th style="width:190px">増減額 / 変更内容</th>
+            <th>変更理由</th>
+            <th style="width:36px"></th>
+          </tr></thead>
+          <tbody id="chumon-changes-tbody"></tbody>
+        </table>
+      </div>
+      <div style="font-size:12px;color:#555;margin-top:6px">現在の注文金額（税込）：<span id="cm-latest-amount" style="font-weight:bold;color:var(--primary);font-size:14px">（変更なし）</span></div>
+    </div>
+    <div class="form-group" style="margin-top:10px"><label>備考・特記事項</label><textarea id="cm-note"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeModal('modal-chumon')">キャンセル</button>
+      <button class="btn btn-warning btn-sm" onclick="printChumon()">🖨 印刷（注文書＋注文請書）</button>
+      <button class="btn btn-primary" onclick="saveChumon()">保存</button>
+    </div>
+  </div>
+</div>
+<!-- コリンズ情報管理モーダル -->
+<div class="modal-overlay" id="modal-corins">
+  <div class="modal" style="max-width:860px">
+    <div class="modal-title">📷 コリンズ情報 画像管理</div>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;background:#f0f4f8;padding:10px 14px;border-radius:6px">
+      <div style="font-size:13px"><span style="color:#888">工事番号：</span><strong id="corins-koji-no"></strong></div>
+      <div style="font-size:13px"><span style="color:#888">工事名：</span><strong id="corins-koji-name"></strong></div>
+      <div style="margin-left:auto;font-size:13px;font-weight:bold" id="corins-count-label"></div>
+    </div>
+    <!-- アップロードエリア -->
+    <div class="corins-upload-area" id="corins-drop-area"
+         onclick="document.getElementById('corins-file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleCorinsDrop(event)">
+      <div class="upload-icon">📄</div>
+      <strong>クリックまたはドラッグ＆ドロップでPDFを追加</strong>
+      <p>PDF のみ　・　最大 30 件まで</p>
+    </div>
+    <input type="file" id="corins-file-input" multiple accept="application/pdf"
+           style="display:none" onchange="handleCorinsUpload(this.files)">
+    <!-- サムネイルグリッド -->
+    <div class="corins-grid" id="corins-grid"></div>
+    <div id="corins-empty" style="text-align:center;color:#aaa;padding:24px;font-size:13px;display:none">
+      まだPDFが登録されていません
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeModal('modal-corins')">閉じる</button>
+    </div>
+  </div>
+</div>
+<!-- 元請契約書PDFモーダル -->
+<div class="modal-overlay" id="modal-contract-pdf">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title" id="cpdf-modal-title">📄 契約書PDF</div>
+    <div id="cpdf-koji-info" style="background:#f0f4f8;border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:13px;color:#555"></div>
+    <!-- 登録済みPDF -->
+    <div id="cpdf-registered" style="display:none;margin-bottom:14px">
+      <div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:32px;flex-shrink:0">📄</span>
+        <div style="flex:1;min-width:0">
+          <div id="cpdf-filename" style="font-weight:bold;color:#1a5276;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+          <div id="cpdf-filedate" style="font-size:11px;color:#888;margin-top:2px"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-primary btn-sm" onclick="openContractPdfView()">🔍 開く</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteContractPdf()">削除</button>
+        </div>
+      </div>
+    </div>
+    <!-- アップロードエリア -->
+    <div id="cpdf-upload-wrap">
+      <div id="cpdf-upload-area" style="border:2px dashed var(--border);border-radius:8px;padding:28px;text-align:center;cursor:pointer;background:#fafcff;transition:.2s"
+           onclick="document.getElementById('cpdf-file-input').click()"
+           ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+           ondragleave="this.style.borderColor='var(--border)'"
+           ondrop="handleContractPdfDrop(event)">
+        <div style="font-size:40px;margin-bottom:8px">📄</div>
+        <strong style="color:var(--primary)">クリックまたはドラッグ＆ドロップでPDFを追加</strong>
+        <p style="color:#888;font-size:13px;margin-top:6px">PDFファイル・1件まで（上書き可）</p>
+      </div>
+    </div>
+    <input type="file" id="cpdf-file-input" accept="application/pdf" style="display:none"
+           onchange="handleContractPdfUpload(this.files[0]);this.value=''">
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeModal('modal-contract-pdf')">閉じる</button>
+    </div>
+  </div>
+</div>
+<!-- 拡大ビューアー -->
+<div class="corins-viewer-overlay" id="corins-viewer">
+  <button class="corins-viewer-close" onclick="closeCorinsViewer()">✕</button>
+  <button class="corins-viewer-nav" id="corins-viewer-prev" onclick="shiftCorinsViewer(-1)">‹</button>
+  <img class="corins-viewer-img" id="corins-viewer-img" src="" alt="コリンズ">
+  <button class="corins-viewer-nav" id="corins-viewer-next" onclick="shiftCorinsViewer(1)">›</button>
+  <div class="corins-viewer-counter" id="corins-viewer-counter"></div>
+</div>
+<div class="modal-overlay" id="modal-yosan-diff">
+  <div class="modal-box" style="max-width:1100px;width:98%">
+    <div class="modal-header">
+      <span>📊 版間差分比較</span>
+      <button class="modal-close" onclick="closeModal('modal-yosan-diff')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:16px;margin-bottom:14px;padding:12px;background:#f0f4ff;border-radius:6px;font-size:13px;align-items:center;flex-wrap:wrap;border:1px solid #c0d0f5">
+        <div>前版：<strong id="yosan-diff-prev-name" style="color:var(--primary)"></strong>　合計 <strong id="yosan-diff-prev-total"></strong></div>
+        <div style="font-size:20px;color:#aaa">→</div>
+        <div>新版：<strong id="yosan-diff-cur-name" style="color:var(--primary)"></strong>　合計 <strong id="yosan-diff-cur-total"></strong></div>
+        <div style="margin-left:auto;font-size:14px">増減：<strong id="yosan-diff-delta" style="font-size:16px"></strong></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;font-size:12px">
+        <span style="background:#e8f5e9;padding:3px 10px;border-radius:3px;color:green;border:1px solid #c8e6c9">■ 新規追加</span>
+        <span style="background:#ffebee;padding:3px 10px;border-radius:3px;color:red;border:1px solid #ffcdd2">■ 削除</span>
+        <span style="background:#fff8e1;padding:3px 10px;border-radius:3px;color:#f57c00;border:1px solid #ffe082">■ 変更あり</span>
+        <span style="background:#f5f5f5;padding:3px 10px;border-radius:3px;color:#aaa;border:1px solid #e0e0e0">■ 変更なし</span>
+      </div>
+      <div style="overflow:auto;max-height:55vh">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:800px">
+          <thead>
+            <tr style="background:#1a5276;color:#fff">
+              <th style="padding:8px 10px;border:1px solid #999;white-space:nowrap">状態</th>
+              <th style="padding:8px 10px;border:1px solid #999">費目</th>
+              <th style="padding:8px 10px;border:1px solid #999">工種</th>
+              <th style="padding:8px 10px;border:1px solid #999">種別</th>
+              <th style="padding:8px 10px;border:1px solid #999">摘要</th>
+              <th style="padding:8px 10px;border:1px solid #999;white-space:nowrap">数量（前）</th>
+              <th style="padding:8px 10px;border:1px solid #999;white-space:nowrap">数量（新）</th>
+              <th style="padding:8px 10px;border:1px solid #999;white-space:nowrap">単価（前）</th>
+              <th style="padding:8px 10px;border:1px solid #999;white-space:nowrap">単価（新）</th>
+              <th style="padding:8px 10px;border:1px solid #999;white-space:nowrap">増減額</th>
+              <th style="padding:8px 10px;border:1px solid #999;white-space:nowrap">金額（新）</th>
+            </tr>
+          </thead>
+          <tbody id="yosan-diff-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="padding:12px 24px;text-align:right;border-top:1px solid var(--border)">
+      <button class="btn btn-light" onclick="closeModal('modal-yosan-diff')">閉じる</button>
+    </div>
+  </div>
+</div>
+<!-- 社員マスタモーダル -->
+<div class="modal-overlay" id="modal-employee">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title" id="emp-modal-title">社員追加</div>
+    <input type="hidden" id="emp-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>氏名 *</label><input id="emp-name" placeholder="例：山田 太郎"></div>
+      <div class="form-group"><label>役職</label><input id="emp-role" placeholder="例：部長、課長、担当者"></div>
+    </div>
+    <div class="form-group"><label>メールアドレス</label><input id="emp-email" type="email" placeholder="例：yamada@example.com"></div>
+    <div class="form-group">
+      <label>パスワード（承認操作に使用）</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="emp-password" type="password" placeholder="4〜20文字" style="flex:1">
+        <button class="btn btn-light btn-sm" onclick="toggleEmpPwd()">👁</button>
+      </div>
+      <div style="font-size:11px;color:#888;margin-top:3px">※ 承認ボタン操作時にパスワード確認が求められます</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeModal('modal-employee')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">保存</button>
+    </div>
+  </div>
+</div>
+<!-- パスワード確認モーダル -->
+<div class="modal-overlay" id="modal-pwd-check">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">🔐 承認者パスワード確認</div>
+    <div style="background:#f0f4f8;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px" id="pwd-check-info"></div>
+    <div class="form-group">
+      <label>パスワードを入力してください</label>
+      <input id="pwd-check-input" type="password" placeholder="パスワード" onkeydown="if(event.key==='Enter')confirmPwdCheck()">
+    </div>
+    <div id="pwd-check-error" style="color:var(--danger);font-size:12px;margin-top:4px;display:none">パスワードが正しくありません</div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="cancelPwdCheck()">キャンセル</button>
+      <button class="btn btn-primary" onclick="confirmPwdCheck()">確認</button>
+    </div>
+  </div>
+</div>
+<!-- 承認ステータスモーダル -->
+<div class="modal-overlay" id="modal-approval">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">📋 承認ステータス変更</div>
+    <input type="hidden" id="apv-type">
+    <input type="hidden" id="apv-koji-id">
+    <input type="hidden" id="apv-doc-id">
+    <div style="background:#f0f4f8;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px" id="apv-doc-info"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>ステータス *</label>
+        <select id="apv-status" style="font-size:14px;padding:8px 12px">
+          <option value="未提出">📝 未提出</option>
+          <option value="提出済み">⏳ 提出済み（承認待ち）</option>
+          <option value="承認済み">✅ 承認済み</option>
+          <option value="差し戻し">⚠️ 差し戻し</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>承認者名</label><input id="apv-approver" placeholder="承認者名"></div>
+      <div class="form-group"><label>承認日</label><input type="date" id="apv-date"></div>
+    </div>
+    <div class="form-group"><label>コメント（差し戻し理由など）</label><textarea id="apv-comment" rows="3" placeholder="コメントを入力…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeModal('modal-approval')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveApproval()">💾 保存</button>
+    </div>
+  </div>
+</div>
+</div><!-- /modal-area -->
+<script>
+// ===== 承認ステータス管理 =====
+const APV_LABELS={yosan:'実行予算書',mitsumori:'見積書',gaichuu:'外注依頼書',chumon:'注文書',genka:'原価管理',seisan:'精算書'};
+const APV_EMOJI={'未提出':'📝','提出済み':'⏳','承認済み':'✅','差し戻し':'⚠️'};
+const APV_PER_DOC=['mitsumori','gaichuu','chumon']; // 書類単位（複数存在）
+const APV_PER_KOJI=['yosan','genka','seisan'];       // 工事単位（1件）
+
+function getKojiApvStore(kojiId){try{return JSON.parse(localStorage.getItem('approval_'+kojiId)||'{}')}catch{return{}}}
+function setKojiApvStore(kojiId,d){localStorage.setItem('approval_'+kojiId,JSON.stringify(d))}
+function getDocApv(kojiId,docType){const s=getKojiApvStore(kojiId);return s[docType]||{status:'未提出',approver:'',date:'',comment:''}}
+
+function approvalChip(status,onclick){
+  const emoji=APV_EMOJI[status]||'📝';
+  return`<span class="apv-chip apv-${status}" ${onclick?`onclick="${onclick}"`:''} title="${status}">${emoji} ${status}</span>`;
+}
+
+let _apvKojiId='',_apvDocType='',_apvDocId='';
+
+function openApprovalModal(kojiId,docType,docId){
+  _apvKojiId=kojiId;_apvDocType=docType;_apvDocId=docId||'';
+  // パスワード認証
+  requirePasswordFor(docType,function(){
+    _showApprovalModal(kojiId,docType,docId||'');
+  });
+}
+
+function _showApprovalModal(kojiId,docType,docId){
+  let apv;
+  if(docId){
+    const doc=DB.get(docType).find(d=>d.id===docId);
+    apv=doc?{status:doc.approvalStatus||'未提出',approver:doc.approvalApprover||'',date:doc.approvalDate||'',comment:doc.approvalComment||''}:{status:'未提出',approver:'',date:'',comment:''};
+  } else {
+    apv=getDocApv(kojiId,docType);
+  }
+  const koji=DB.get('koji').find(k=>k.id===kojiId);
+  const docLabel=APV_LABELS[docType]||docType;
+  let infoHtml=`<strong>${docLabel}</strong>`;
+  if(koji) infoHtml+=`　工事：<strong>${escHtml(koji.name)}</strong>`;
+  if(docId){const doc=DB.get(docType).find(d=>d.id===docId);if(doc)infoHtml+=`　番号：${escHtml(doc.no||'')}`;}
+  // 設定から承認者名を自動セット
+  const autoApprover=getApproverNameForDoc(docType);
+  document.getElementById('apv-doc-info').innerHTML=infoHtml;
+  document.getElementById('apv-status').value=apv.status;
+  document.getElementById('apv-approver').value=apv.approver||autoApprover;
+  document.getElementById('apv-date').value=apv.date||(apv.status==='未提出'?today():apv.date);
+  document.getElementById('apv-comment').value=apv.comment;
+  document.getElementById('modal-approval').classList.add('open');
+}
+
+function openApvForCurrentKoji(docType){
+  const selId={yosan:'yosan-koji-sel',genka:'genka-koji-sel',seisan:'seisan-koji-sel'}[docType];
+  const kid=document.getElementById(selId).value;
+  if(!kid){alert('工事を選択してください');return}
+  openApprovalModal(kid,docType,'');
+}
+
+function saveApproval(){
+  const status=document.getElementById('apv-status').value;
+  const approver=document.getElementById('apv-approver').value;
+  const date=document.getElementById('apv-date').value;
+  const comment=document.getElementById('apv-comment').value;
+  if(_apvDocId){
+    const list=DB.get(_apvDocType);
+    const doc=list.find(d=>d.id===_apvDocId);
+    if(doc){doc.approvalStatus=status;doc.approvalApprover=approver;doc.approvalDate=date;doc.approvalComment=comment;DB.set(_apvDocType,list);}
+  } else {
+    const apv=getKojiApvStore(_apvKojiId);
+    apv[_apvDocType]={status,approver,date,comment};
+    setKojiApvStore(_apvKojiId,apv);
+  }
+  closeModal('modal-approval');
+  renderKojiList();renderDashboard();
+  if(_apvDocType==='mitsumori') renderMitsumoriList();
+  if(_apvDocType==='gaichuu') renderGaichuuList();
+  if(_apvDocType==='chumon') renderChumonList();
+}
+
+// 工事の各書類承認状況サマリ（per-doc型は最悪ステータスで集約）
+function getKojiApvSummary(kojiId){
+  const perKoji=getKojiApvStore(kojiId);
+  const res={};
+  APV_PER_KOJI.forEach(dt=>{ res[dt]=(perKoji[dt]||{status:'未提出'}).status; });
+  APV_PER_DOC.forEach(dt=>{
+    const docs=DB.get(dt).filter(d=>d.kojiId===kojiId);
+    if(docs.length===0){res[dt]='未提出';return}
+    const statuses=docs.map(d=>d.approvalStatus||'未提出');
+    if(statuses.includes('差し戻し')) res[dt]='差し戻し';
+    else if(statuses.includes('提出済み')) res[dt]='提出済み';
+    else if(statuses.every(s=>s==='承認済み')) res[dt]='承認済み';
+    else res[dt]='未提出';
+  });
+  return res;
+}
+
+function countPendingApprovals(){
+  let n=0;
+  DB.get('koji').forEach(k=>{
+    const apv=getKojiApvStore(k.id);
+    APV_PER_KOJI.forEach(dt=>{if((apv[dt]||{status:'未提出'}).status==='提出済み') n++;});
+  });
+  APV_PER_DOC.forEach(dt=>{DB.get(dt).forEach(d=>{if((d.approvalStatus||'未提出')==='提出済み') n++;});});
+  return n;
+}
+
+// ===== 年度システム =====
+function getFiscalYear(dateStr){
+  if(!dateStr) return null;
+  const d=new Date(dateStr);
+  const m=d.getMonth()+1;
+  return m>=5?d.getFullYear():d.getFullYear()-1;
+}
+function getCurrentFiscalYear(){return getFiscalYear(today())}
+function toWareki(fy){
+  if(fy>=2019){const r=fy-2018;return r===1?'令和元年度':`令和${r}年度`}
+  if(fy>=1989) return `平成${fy-1988}年度`;
+  return `${fy}年度`;
+}
+function fyLabel(fy){return `${fy}年度（${toWareki(fy)}）`}
+function getKojiFiscalYear(k){return getFiscalYear(k.start)||getFiscalYear(k.end)||getCurrentFiscalYear()}
+function kojiInFiscalYear(k,fy){
+  const base=getKojiFiscalYear(k);
+  if(base===fy) return true;
+  if(k.kurikoshi&&base===fy-1) return true;
+  return false;
+}
+let currentViewYear=0;
+function changeDashYear(delta){currentViewYear+=delta;renderDashboard()}
+function changeListYear(delta){currentViewYear+=delta;renderKojiList();renderDashboard()}
+
+// 実行予算書の現在版のラインを取得（新旧両形式対応）
+function getYosanLines(kojiId){
+  const saved=DB.getObj('yosan_'+kojiId);
+  if(saved.versions&&saved.versions.length>0){
+    const idx=saved.currentVersionIdx||0;
+    return(saved.versions[Math.min(idx,saved.versions.length-1)]||saved.versions[0]).lines||[];
+  }
+  return saved.lines||[];
+}
+
+// ===== 変更履歴（変更契約・工期変更 統合） =====
+let allChanges=[];
+function loadAllChangesFromKoji(k){
+  if(k.allChanges){
+    const all=JSON.parse(JSON.stringify(k.allChanges));
+    all.forEach(c=>{if(!c.id) c.id=genId();});
+    return all;
+  }
+  // 旧フォーマットからの移行（日付順にマージ）
+  const all=[];
+  (k.contractChanges||[]).forEach(c=>all.push({type:'contract',date:c.date||'',amountTax:c.amountTax||0,reason:c.reason||'',id:genId()}));
+  (k.periodChanges||[]).forEach(p=>all.push({type:'period',date:p.date||'',newEnd:p.newEnd||'',reason:p.reason||'',id:genId()}));
+  all.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  return all;
+}
+function renderAllChanges(){
+  const tbody=document.getElementById('all-changes-tbody');
+  if(!tbody) return;
+  const lpEl=document.getElementById('km-latest-price');
+  const leEl=document.getElementById('km-latest-end');
+  if(allChanges.length===0){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#aaa;padding:8px;font-size:12px">変更なし</td></tr>';
+    if(lpEl) lpEl.textContent='（変更なし）';
+    if(leEl) leEl.textContent='（変更なし）';
+    return;
+  }
+  const origTax=unFmt(document.getElementById('km-price-tax').value)||0;
+  tbody.innerHTML=allChanges.map((c,i)=>{
+    const isContract=c.type==='contract';
+    let diffHtml='';
+    let amtCell='';
+    let endCell='';
+    if(isContract){
+      let prevAmt=origTax;
+      for(let j=i-1;j>=0;j--){if(allChanges[j].type==='contract'){prevAmt=allChanges[j].amountTax||0;break;}}
+      const curAmt=c.amountTax||0;
+      const diff=curAmt-prevAmt;
+      const diffFromOrig=curAmt-origTax;
+      diffHtml=`<span style="color:${diff>=0?'var(--success)':'var(--danger)'};font-weight:bold">${(diff>=0?'+':'')+fmt(diff)}円</span><div style="font-size:10px;color:${diffFromOrig>=0?'var(--success)':'var(--danger)'}">当初比 ${(diffFromOrig>=0?'+':'')+fmt(diffFromOrig)}円</div>`;
+      amtCell=`<input value="${fmt(c.amountTax||0)}" style="text-align:right;width:100%;border:none;background:transparent;font-size:13px;font-weight:bold" oninput="allChanges[${i}].amountTax=unFmt(this.value);renderAllChanges()" onblur="this.value=fmt(allChanges[${i}].amountTax||0);renderAllChanges()">`;
+    } else {
+      endCell=`<input type="date" value="${c.newEnd||''}" style="width:100%;border:none;background:transparent;font-size:13px;font-weight:bold" oninput="allChanges[${i}].newEnd=this.value;updateLatestEnd()">`;
+    }
+    const cid=c.id||('c'+i);
+    const _kjId=document.getElementById('koji-edit-id').value;
+    const _hasPdf=_kjId&&getContractPdf(_kjId,cid);
+    const pdfBtnHtml=isContract
+      ?'<button class="btn btn-sm" style="background:#e8f0ff;color:#1a5276;border:1px solid #aac0f0;padding:3px 6px;font-size:11px;white-space:nowrap" onclick="openContractPdfModal(\''+cid+'\',\'第'+(i+1)+'回 変更契約書\')">📄'+(_hasPdf?' <span style="color:var(--success)">✔</span>':'')+'</button>'
+      :'—';
+    return`<tr>
+      <td style="text-align:center;font-weight:bold">第${i+1}回</td>
+      <td style="text-align:center">${isContract?'<span class="badge badge-blue" style="font-size:10px;padding:1px 5px">変更契約</span>':'<span class="badge badge-green" style="font-size:10px;padding:1px 5px">工期変更</span>'}</td>
+      <td><input type="date" value="${c.date||''}" style="width:100%;border:none;background:transparent;font-size:13px" oninput="allChanges[${i}].date=this.value"></td>
+      <td>${amtCell}</td>
+      <td>${endCell}</td>
+      <td style="text-align:right;padding:4px 8px">${diffHtml}</td>
+      <td><input value="${c.reason||''}" style="width:100%;border:none;background:transparent;font-size:13px" oninput="allChanges[${i}].reason=this.value" placeholder="変更理由"></td>
+      <td style="text-align:center">${pdfBtnHtml}</td>
+      <td><button class="del-btn" onclick="allChanges.splice(${i},1);renderAllChanges()">✕</button></td>
+    </tr>`;
+  }).join('');
+  updateLatestPrice();
+  updateLatestEnd();
+}
+function addContractChange(){allChanges.push({type:'contract',date:today(),amountTax:0,reason:'',id:genId()});renderAllChanges();}
+function addPeriodChange(){allChanges.push({type:'period',date:today(),newEnd:'',reason:'',id:genId()});renderAllChanges();}
+function updateLatestPrice(){
+  const el=document.getElementById('km-latest-price');
+  if(!el) return;
+  for(let i=allChanges.length-1;i>=0;i--){
+    if(allChanges[i].type==='contract'){el.textContent=fmt(allChanges[i].amountTax||0)+' 円（税込）';return;}
+  }
+  el.textContent='（変更なし）';
+}
+function updateLatestEnd(){
+  const el=document.getElementById('km-latest-end');
+  if(!el) return;
+  for(let i=allChanges.length-1;i>=0;i--){
+    if(allChanges[i].type==='period'){el.textContent=allChanges[i].newEnd||'（未入力）';return;}
+  }
+  el.textContent='（変更なし）';
+}
+function getLatestPrice(k){
+  const changes=k.allChanges||[];
+  for(let i=changes.length-1;i>=0;i--){if(changes[i].type==='contract') return changes[i].amountTax||0;}
+  if(k.contractChanges&&k.contractChanges.length>0)
+    return k.contractChanges[k.contractChanges.length-1].amountTax||0;
+  return k.priceTax||0;
+}
+function getLatestEnd(k){
+  const changes=k.allChanges||[];
+  for(let i=changes.length-1;i>=0;i--){if(changes[i].type==='period') return changes[i].newEnd||k.end||'';}
+  if(k.periodChanges&&k.periodChanges.length>0)
+    return k.periodChanges[k.periodChanges.length-1].newEnd||k.end||'';
+  return k.end||'';
+}
+
+// ===== 受賞履歴 =====
+let awardHistory=[];
+const AWARD_MAX=5;
+
+function getAwardPdf(kojiId,awardId){return localStorage.getItem('award_pdf_'+kojiId+'_'+awardId)||null}
+function saveAwardPdf(kojiId,awardId,data){
+  if(data) localStorage.setItem('award_pdf_'+kojiId+'_'+awardId,data);
+  else localStorage.removeItem('award_pdf_'+kojiId+'_'+awardId);
+}
+
+function renderAwardList(){
+  const kojiId=document.getElementById('koji-edit-id').value;
+  const el=document.getElementById('award-list');
+  const cntEl=document.getElementById('award-count-label');
+  cntEl.textContent=awardHistory.length+'/'+AWARD_MAX+'件';
+  if(awardHistory.length===0){
+    el.innerHTML='<div style="text-align:center;color:#bbb;font-size:12px;padding:8px">受賞履歴なし</div>';
+    return;
+  }
+  el.innerHTML=awardHistory.map((a,i)=>{
+    const hasPdf=kojiId&&a.id&&getAwardPdf(kojiId,a.id);
+    return`<div class="award-card">
+      <button class="award-del" onclick="removeAward(${i})" title="削除">✕</button>
+      <div class="award-header">
+        <span class="award-num">${i+1}</span>
+        <select class="award-type-sel" onchange="awardHistory[${i}].type=this.value;renderAwardList()">
+          <option value="corp"${(a.type||'corp')==='corp'?' selected':''}>🏢 法人表彰</option>
+          <option value="emp"${a.type==='emp'?' selected':''}>👤 個人表彰</option>
+        </select>
+        <span class="award-badge ${a.type==='emp'?'award-badge-emp':'award-badge-corp'}">${a.type==='emp'?'個人':'法人'}</span>
+      </div>
+      <div class="award-row">
+        <div class="award-field"><label>受賞名</label><input value="${escHtml(a.name||'')}" placeholder="例：優良工事表彰" oninput="awardHistory[${i}].name=this.value"></div>
+        <div class="award-field"><label>授与機関</label><input value="${escHtml(a.org||'')}" placeholder="例：国土交通省" oninput="awardHistory[${i}].org=this.value"></div>
+      </div>
+      <div class="award-row">
+        <div class="award-field"><label>受賞日</label><input type="date" value="${escHtml(a.date||'')}" oninput="awardHistory[${i}].date=this.value"></div>
+        ${a.type==='emp'?`<div class="award-field award-employee"><label>受賞者氏名</label><input value="${escHtml(a.employee||'')}" placeholder="氏名" oninput="awardHistory[${i}].employee=this.value"></div>`:'<div class="award-field"></div>'}
+      </div>
+      <div class="award-row single">
+        <div class="award-field"><label>備考</label><textarea oninput="awardHistory[${i}].memo=this.value" placeholder="表彰内容など">${escHtml(a.memo||'')}</textarea></div>
+      </div>
+      <div class="award-pdf-area">
+        ${hasPdf
+          ?`<span class="award-pdf-name">📄 ${escHtml(a.pdfName||'賞状.pdf')}</span>
+             <button class="btn btn-sm" style="background:#eaf4ff;color:var(--accent);border:1px solid #aad4f0" onclick="viewAwardPdf(${i})">開く</button>
+             <button class="btn btn-sm btn-danger" onclick="deleteAwardPdf(${i})">削除</button>`
+          :`<label class="btn btn-sm btn-light" style="cursor:pointer;margin:0">
+              📎 賞状PDF添付
+              <input type="file" accept="application/pdf" style="display:none" onchange="uploadAwardPdf(${i},this)">
+            </label>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addAward(){
+  if(awardHistory.length>=AWARD_MAX){alert('受賞履歴は最大'+AWARD_MAX+'件です');return}
+  awardHistory.push({id:genId(),type:'corp',name:'',org:'',date:'',employee:'',memo:'',pdfName:''});
+  renderAwardList();
+}
+function removeAward(i){
+  const kojiId=document.getElementById('koji-edit-id').value;
+  const a=awardHistory[i];
+  if(a&&a.id&&kojiId) saveAwardPdf(kojiId,a.id,null);
+  awardHistory.splice(i,1);
+  renderAwardList();
+}
+function uploadAwardPdf(i,input){
+  const file=input.files[0];
+  if(!file) return;
+  const kojiId=document.getElementById('koji-edit-id').value;
+  const a=awardHistory[i];
+  if(!a.id) a.id=genId();
+  const reader=new FileReader();
+  reader.onload=function(e){
+    saveAwardPdf(kojiId,a.id,e.target.result);
+    a.pdfName=file.name;
+    renderAwardList();
+  };
+  reader.readAsDataURL(file);
+}
+function viewAwardPdf(i){
+  const kojiId=document.getElementById('koji-edit-id').value;
+  const a=awardHistory[i];
+  const data=getAwardPdf(kojiId,a.id);
+  if(!data){alert('PDFが見つかりません');return}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#555"><iframe src="${data}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
+  w.document.close();
+}
+function deleteAwardPdf(i){
+  if(!confirm('このPDFを削除しますか？'))return;
+  const kojiId=document.getElementById('koji-edit-id').value;
+  const a=awardHistory[i];
+  saveAwardPdf(kojiId,a.id,null);
+  a.pdfName='';
+  renderAwardList();
+}
+
+// ===== 元請契約書PDF =====
+let currentCpdfKojiId='';
+let currentCpdfKey='';
+let currentCpdfLabel='';
+
+function getContractPdf(kojiId,key){
+  try{const v=localStorage.getItem('cpdf_'+kojiId+'_'+key);return v?JSON.parse(v):null}catch{return null}
+}
+function _saveContractPdfData(kojiId,key,obj){
+  if(obj) localStorage.setItem('cpdf_'+kojiId+'_'+key,JSON.stringify(obj));
+  else localStorage.removeItem('cpdf_'+kojiId+'_'+key);
+}
+function openContractPdfModal(key,label){
+  const kojiId=document.getElementById('koji-edit-id').value;
+  if(!kojiId){alert('工事を一度保存してから契約書PDFを追加してください');return}
+  _resetCpdfModal();
+  currentCpdfKojiId=kojiId;
+  currentCpdfKey=key;
+  currentCpdfLabel=label;
+  document.getElementById('cpdf-modal-title').textContent='📄 '+label;
+  const koji=DB.get('koji').find(k=>k.id===kojiId);
+  document.getElementById('cpdf-koji-info').textContent=(koji?`[${koji.no}] ${koji.name}　`:'')+'対象：'+label;
+  _renderCpdfModal();
+  document.getElementById('modal-contract-pdf').classList.add('open');
+}
+function _renderCpdfModal(){
+  const pdf=getContractPdf(currentCpdfKojiId,currentCpdfKey);
+  const regEl=document.getElementById('cpdf-registered');
+  const upWrap=document.getElementById('cpdf-upload-wrap');
+  if(pdf){
+    document.getElementById('cpdf-filename').textContent=pdf.name||'contract.pdf';
+    document.getElementById('cpdf-filedate').textContent=pdf.date?'登録日：'+pdf.date:'';
+    regEl.style.display='block';
+    upWrap.querySelector('#cpdf-upload-area').style.opacity='0.5';
+    upWrap.querySelector('#cpdf-upload-area').title='クリックで上書き';
+  } else {
+    regEl.style.display='none';
+    upWrap.querySelector('#cpdf-upload-area').style.opacity='1';
+    upWrap.querySelector('#cpdf-upload-area').title='';
+  }
+  renderAllChanges(); // PDF登録済みバッジを更新
+}
+function handleContractPdfUpload(file){
+  if(!file) return;
+  if(file.type!=='application/pdf'){alert('PDFファイルを選択してください');return}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    _saveContractPdfData(currentCpdfKojiId,currentCpdfKey,{data:e.target.result,name:file.name,date:today()});
+    _renderCpdfModal();
+  };
+  reader.readAsDataURL(file);
+}
+function handleContractPdfDrop(e){
+  e.preventDefault();
+  e.currentTarget.style.borderColor='var(--border)';
+  const file=e.dataTransfer.files[0];
+  if(file) handleContractPdfUpload(file);
+}
+function openContractPdfView(){
+  const pdf=getContractPdf(currentCpdfKojiId,currentCpdfKey);
+  if(!pdf||!pdf.data){alert('PDFが登録されていません');return}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>${currentCpdfLabel}</title></head><body style="margin:0;background:#555"><iframe src="${pdf.data}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
+  w.document.close();
+}
+function deleteContractPdf(){
+  if(!confirm('「'+currentCpdfLabel+'」のPDFを削除しますか？')) return;
+  _saveContractPdfData(currentCpdfKojiId,currentCpdfKey,null);
+  _renderCpdfModal();
+}
+function getContractPdfCount(kojiId){
+  if(!kojiId) return 0;
+  let count=0;
+  if(getContractPdf(kojiId,'orig')) count++;
+  const koji=DB.get('koji').find(k=>k.id===kojiId);
+  if(koji)(koji.allChanges||[]).forEach(c=>{if(c.type==='contract'&&c.id&&getContractPdf(kojiId,c.id)) count++;});
+  return count;
+}
+// 台帳リストから直接開く：契約書一覧モーダル
+function openContractPdfsModal(kojiId){
+  const koji=DB.get('koji').find(k=>k.id===kojiId);
+  if(!koji) return;
+  // 一時的にモーダルを使い回す
+  currentCpdfKojiId=kojiId;
+  // 原契約書とすべての変更契約書を一覧で開く専用ビュー
+  const contracts=[];
+  contracts.push({key:'orig',label:'原契約書'});
+  (koji.allChanges||[]).forEach((c,i)=>{if(c.type==='contract'&&c.id) contracts.push({key:c.id,label:'第'+(i+1)+'回 変更契約書'});});
+  // 一覧用HTMLを動的生成してモーダルを開く
+  document.getElementById('cpdf-modal-title').textContent='📄 元請契約書一覧';
+  document.getElementById('cpdf-koji-info').innerHTML=`<strong>[${koji.no}] ${koji.name}</strong>`;
+  document.getElementById('cpdf-registered').style.display='none';
+  document.getElementById('cpdf-upload-wrap').style.display='none';
+  const footer=document.querySelector('#modal-contract-pdf .modal-footer');
+  // 契約書ごとの行を一覧表示
+  let listHtml='<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">';
+  contracts.forEach(({key,label})=>{
+    const pdf=getContractPdf(kojiId,key);
+    if(pdf){
+      listHtml+=`<div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:24px">📄</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;color:#555;font-weight:bold">${label}</div>
+          <div style="font-size:13px;color:#1a5276;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pdf.name||'contract.pdf'}</div>
+          <div style="font-size:11px;color:#888">${pdf.date?'登録日：'+pdf.date:''}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="currentCpdfKey='${key}';currentCpdfLabel='${label}';openContractPdfView()">🔍 開く</button>
+      </div>`;
+    } else {
+      listHtml+=`<div style="background:#f5f5f5;border:1px solid #e0e0e0;border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:24px;opacity:0.4">📄</span>
+        <div style="flex:1"><div style="font-size:12px;color:#555;font-weight:bold">${label}</div><div style="font-size:12px;color:#aaa">未登録</div></div>
+      </div>`;
+    }
+  });
+  listHtml+='</div>';
+  listHtml+=`<div style="font-size:12px;color:#888;text-align:center">契約書の追加・削除は「編集」→変更履歴から行えます</div>`;
+  // モーダル内の既存エリアを置き換え
+  let listContainer=document.getElementById('cpdf-list-container');
+  if(!listContainer){
+    listContainer=document.createElement('div');
+    listContainer.id='cpdf-list-container';
+    document.getElementById('modal-contract-pdf').querySelector('.modal').insertBefore(listContainer, footer);
+  }
+  listContainer.innerHTML=listHtml;
+  document.getElementById('modal-contract-pdf').classList.add('open');
+}
+// 通常の1件編集モードに戻す際にリストビューを片付け
+function _resetCpdfModal(){
+  const c=document.getElementById('cpdf-list-container');
+  if(c) c.innerHTML='';
+  document.getElementById('cpdf-upload-wrap').style.display='';
+}
+// 削除時に関連契約書PDFも削除
+function deleteContractPdfsForKoji(kojiId){
+  Object.keys(localStorage).filter(k=>k.startsWith('cpdf_'+kojiId+'_')).forEach(k=>localStorage.removeItem(k));
+}
+
+// ===== コリンズ =====
+const CORINS_MAX=30;
+let currentCorinsKojiId='';
+
+function getCorinsImages(kojiId){
+  try{const v=JSON.parse(localStorage.getItem('corins_'+kojiId)||'[]');return Array.isArray(v)?v:[]}catch{return[]}
+}
+function saveCorinsImages(kojiId,arr){localStorage.setItem('corins_'+kojiId,JSON.stringify(arr))}
+
+function openCorinsModal(kojiId){
+  const koji=DB.get('koji').find(k=>k.id===kojiId);
+  if(!koji) return;
+  currentCorinsKojiId=kojiId;
+  document.getElementById('corins-koji-no').textContent=koji.no;
+  document.getElementById('corins-koji-name').textContent=koji.name;
+  document.getElementById('corins-file-input').value='';
+  renderCorinsGrid();
+  document.getElementById('modal-corins').classList.add('open');
+}
+
+function renderCorinsGrid(){
+  const items=getCorinsImages(currentCorinsKojiId);
+  const grid=document.getElementById('corins-grid');
+  const empty=document.getElementById('corins-empty');
+  const countEl=document.getElementById('corins-count-label');
+  countEl.textContent=items.length+'/'+CORINS_MAX+'件';
+  if(items.length===0){grid.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  grid.innerHTML=items.map((item,i)=>{
+    // 旧形式（文字列）対応
+    const name=typeof item==='object'?(item.name||'ファイル'+(i+1)+'.pdf'):'ファイル'+(i+1)+'.pdf';
+    const regDate=typeof item==='object'?(item.regDate||''):'';
+    return`<div class="corins-item">
+      <span class="ci-icon">📄</span>
+      <div class="ci-info">
+        <div class="ci-name" title="${escHtml(name)}">${escHtml(name)}</div>
+        <div class="ci-date">登録日：<input type="date" value="${escHtml(regDate)}" style="border:none;background:transparent;font-size:11px;color:#555;cursor:pointer" onchange="updateCorinsRegDate(${i},this.value)"></div>
+      </div>
+      <span class="ci-num">${i+1}</span>
+      <button class="ci-open" onclick="openCorisinsPdf(${i})">開く</button>
+      <button class="ci-del" onclick="deleteCorinsItem(${i})" title="削除">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function handleCorinsUpload(files){
+  const items=getCorinsImages(currentCorinsKojiId);
+  const remaining=CORINS_MAX-items.length;
+  if(remaining<=0){alert('最大'+CORINS_MAX+'件までです');return}
+  const toAdd=Array.from(files).slice(0,remaining);
+  let loaded=0;
+  toAdd.forEach(file=>{
+    if(file.type!=='application/pdf'){alert(file.name+'はPDFファイルではありません');loaded++;if(loaded===toAdd.length)renderCorinsGrid();return}
+    const reader=new FileReader();
+    reader.onload=function(e){
+      items.push({data:e.target.result,name:file.name,regDate:today()});
+      loaded++;
+      if(loaded===toAdd.length){saveCorinsImages(currentCorinsKojiId,items);renderCorinsGrid();}
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function openCorisinsPdf(idx){
+  const items=getCorinsImages(currentCorinsKojiId);
+  const item=items[idx];
+  if(!item) return;
+  const data=typeof item==='object'?item.data:item;
+  if(!data){alert('データが見つかりません');return}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#555"><iframe src="${data}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
+  w.document.close();
+}
+
+function updateCorinsRegDate(idx,dateVal){
+  const items=getCorinsImages(currentCorinsKojiId);
+  if(!items[idx]) return;
+  if(typeof items[idx]==='string') items[idx]={data:items[idx],name:'ファイル'+(idx+1)+'.pdf',regDate:dateVal};
+  else items[idx].regDate=dateVal;
+  saveCorinsImages(currentCorinsKojiId,items);
+}
+
+function deleteCorinsItem(idx){
+  if(!confirm('このファイルを削除しますか？'))return;
+  const items=getCorinsImages(currentCorinsKojiId);
+  items.splice(idx,1);
+  saveCorinsImages(currentCorinsKojiId,items);
+  renderCorinsGrid();
+}
+
+// ===== データストア =====
+const DB={
+  get(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch{return[]}},
+  set(k,v){localStorage.setItem(k,JSON.stringify(v))},
+  getObj(k){try{return JSON.parse(localStorage.getItem(k)||'{}')}catch{return{}}}
+};
+
+// ===== ユーティリティ =====
+const fmt=n=>Number(n||0).toLocaleString('ja-JP');
+const unFmt=s=>Number(String(s).replace(/,/g,'')||0);
+const today=()=>new Date().toISOString().slice(0,10);
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function nextNo(type,prefix){
+  const list=DB.get(type);
+  if(list.length===0) return prefix+'-001';
+  const nums=list.map(x=>{const m=x.no.match(/(\d+)$/);return m?parseInt(m[1]):0});
+  return prefix+'-'+String(Math.max(...nums)+1).padStart(3,'0');
+}
+function statusBadge(s){
+  const map={
+    '受注':'badge-blue','着工':'badge-blue','施工中':'badge-green','完工':'badge-yellow','精算済':'badge-gray',
+    '提出前':'badge-gray','提出済':'badge-blue','承認済':'badge-green','却下':'badge-red',
+    '依頼中':'badge-blue','作業中':'badge-green','完了':'badge-yellow','キャンセル':'badge-red',
+    '発注前':'badge-gray','発注済':'badge-blue','納品済':'badge-yellow','検収済':'badge-green'
+  };
+  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+}
+
+// ===== ナビゲーション =====
+// 修正: event引数を明示的に受け取るように変更（グローバルeventオブジェクトへの依存を解消）
+function showPage(id,ev){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(ev&&ev.target) ev.target.classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  if(id==='koji-list') renderKojiList();
+  if(id==='mitsumori'){renderMitsumoriList();populateKojiSelects()}
+  if(id==='gaichuu'){renderGaichuuList();populateKojiSelects()}
+  if(id==='chumon'){renderChumonList();populateKojiSelects()}
+  if(id==='settings') renderSettingsPage();
+  if(id==='yosan'||id==='genka'||id==='seisan'){
+    populateKojiSelects();
+    if(id==='yosan'&&document.getElementById('yosan-koji-sel').value) loadYosan();
+    if(id==='genka'&&document.getElementById('genka-koji-sel').value) loadGenka();
+    if(id==='seisan'&&document.getElementById('seisan-koji-sel').value) loadSeisan();
+  }
+}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+function populateKojiSelects(){
+  const kojiList=DB.get('koji');
+  ['yosan-koji-sel','genka-koji-sel','seisan-koji-sel'].forEach(sid=>{
+    const el=document.getElementById(sid);
+    if(!el) return;
+    const cur=el.value;
+    el.innerHTML='<option value="">-- 工事を選択 --</option>';
+    kojiList.forEach(k=>{el.innerHTML+=`<option value="${k.id}">[${k.no}] ${k.name}</option>`});
+    if(cur) el.value=cur;
+  });
+  ['mm-koji','gm-koji','cm-koji','mitsumori-koji-filter','gaichuu-koji-filter','chumon-koji-filter'].forEach(sid=>{
+    const el=document.getElementById(sid);
+    if(!el) return;
+    const cur=el.value;
+    const isFilter=sid.includes('filter');
+    el.innerHTML=isFilter?'<option value="">全工事</option>':'<option value="">-- 選択 --</option>';
+    kojiList.forEach(k=>{el.innerHTML+=`<option value="${k.id}">[${k.no}] ${k.name}</option>`});
+    if(cur) el.value=cur;
+  });
+}
+</script>
+<script>
+// ===== ダッシュボード =====
+function renderDashboard(){
+  const fy=currentViewYear;
+  const ylEl=document.getElementById('dash-year-label');
+  const yrEl=document.getElementById('dash-year-range');
+  if(ylEl) ylEl.textContent=fyLabel(fy);
+  if(yrEl) yrEl.textContent=`${fy}/5/1 〜 ${fy+1}/4/30`;
+  const allKoji=DB.get('koji');
+  const koji=allKoji.filter(k=>kojiInFiscalYear(k,fy));
+  const kurikoshiIn=koji.filter(k=>k.kurikoshi&&getKojiFiscalYear(k)===fy-1);
+  const active=koji.filter(k=>['受注','着工','施工中'].includes(k.status));
+  const done=koji.filter(k=>['完工','精算済'].includes(k.status));
+  const totalUkeoi=koji.reduce((s,k)=>s+getLatestPrice(k),0);
+  const pendingApv=countPendingApprovals();
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card"><div class="val">${koji.length}</div><div class="lbl">${fyLabel(fy)} 工事件数</div></div>
+    <div class="stat-card" style="border-color:var(--success)"><div class="val">${active.length}</div><div class="lbl">進行中</div></div>
+    <div class="stat-card" style="border-color:var(--warning)"><div class="val">${done.length}</div><div class="lbl">完工・精算済</div></div>
+    <div class="stat-card" style="border-color:#e67e22"><div class="val">${kurikoshiIn.length}</div><div class="lbl">繰越受入（前年度）</div></div>
+    <div class="stat-card" style="border-color:var(--primary)"><div class="val" style="font-size:18px">${fmt(totalUkeoi)}</div><div class="lbl">合計請負金額（円）</div></div>
+    <div class="stat-card" style="border-color:var(--danger);cursor:${pendingApv>0?'pointer':'default'}" ${pendingApv>0?'onclick="showPage(\'koji-list\',{target:document.querySelector(\'.nav-btn:nth-child(2)\')})"':''}>
+      <div class="val" style="color:${pendingApv>0?'var(--danger)':'var(--success)'}">${pendingApv}</div>
+      <div class="lbl">⏳ 承認待ち件数</div>
+    </div>
+    <div class="stat-card" style="border-color:#9b59b6"><div class="val">${DB.get('mitsumori').length}</div><div class="lbl">見積書（全件）</div></div>
+    <div class="stat-card" style="border-color:#aaa"><div class="val">${DB.get('gaichuu').length}</div><div class="lbl">外注依頼（全件）</div></div>
+  `;
+  const titleEl=document.getElementById('dash-table-title');
+  if(titleEl) titleEl.textContent=`${fyLabel(fy)} 工事一覧`;
+  const tbody=document.getElementById('dash-tbody');
+  if(koji.length===0){
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;color:#999;padding:24px">${fyLabel(fy)}の工事はありません</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=koji.map(k=>{
+    const latestPrice=getLatestPrice(k);
+    const latestEnd=getLatestEnd(k);
+    const allCh=k.allChanges||[];
+    const cCnt=allCh.length>0?allCh.filter(c=>c.type==='contract').length:(k.contractChanges||[]).length;
+    const pCnt=allCh.length>0?allCh.filter(c=>c.type==='period').length:(k.periodChanges||[]).length;
+    const totalCh=cCnt+pCnt;
+    const isKurikoshiIn=k.kurikoshi&&getKojiFiscalYear(k)===fy-1;
+    const yLines=getYosanLines(k.id);
+    const yTotal=yLines.reduce((s,l)=>s+(l.kin||unFmt(l.kin)||0),0);
+    const gData=DB.getObj('genka_'+k.id);
+    const gTotal=gData.lines?gData.lines.reduce((s,l)=>s+unFmt(l.jisseki),0):0;
+    const rate=yTotal>0?Math.round(gTotal/yTotal*100):0;
+    const barColor=rate>90?'danger':rate>70?'warn':'';
+    return`<tr${isKurikoshiIn?' style="background:#fffbf0"':''}>
+      <td>${k.no}${isKurikoshiIn?'<span class="badge badge-yellow" style="margin-left:4px">繰越</span>':''}</td>
+      <td><strong>${k.name}</strong></td>
+      <td>${k.client||''}</td>
+      <td class="num">${fmt(latestPrice)}円${cCnt>0?'<span style="font-size:10px;color:var(--danger);margin-left:4px">✎変'+cCnt+'回</span>':''}</td>
+      <td style="text-align:center;font-size:12px">
+        ${totalCh>0?`<span class="badge badge-blue">計${totalCh}回</span><div style="font-size:10px;margin-top:2px">${cCnt>0?`契約${cCnt}回`:''}${cCnt>0&&pCnt>0?'・':''}${pCnt>0?`工期${pCnt}回`:''}</div>`:'<span style="color:#ccc">—</span>'}
+      </td>
+      <td style="text-align:center">${k.score||'—'}</td>
+      <td style="min-width:140px">
+        <div style="display:flex;justify-content:space-between;font-size:12px"><span>${fmt(gTotal)}</span><span>${rate}%</span></div>
+        <div class="progress-bar"><div class="progress-fill ${barColor}" style="width:${Math.min(rate,100)}%"></div></div>
+      </td>
+      <td style="font-size:12px">${latestEnd}</td>
+      <td>${statusBadge(k.status)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== 工事台帳 =====
+function openKojiModal(id){
+  populateKojiSelects();
+  const edit=id?DB.get('koji').find(k=>k.id===id):null;
+  document.getElementById('koji-modal-title').textContent=edit?'工事編集':'工事登録';
+  document.getElementById('koji-edit-id').value=id||'';
+  if(edit){
+    document.getElementById('km-no').value=edit.no;
+    document.getElementById('km-name').value=edit.name;
+    document.getElementById('km-client').value=edit.client||'';
+    document.getElementById('km-addr').value=edit.addr||'';
+    document.getElementById('km-price').value=edit.price>0?fmt(edit.price):'';
+    document.getElementById('km-tax').value=edit.taxRate||10;
+    document.getElementById('km-price-tax').value=edit.priceTax>0?fmt(edit.priceTax):'';
+    document.getElementById('km-start').value=edit.start||'';
+    document.getElementById('km-end').value=edit.end||'';
+    document.getElementById('km-tanto').value=edit.tanto||'';
+    document.getElementById('km-dairi').value=edit.dairi||'';
+    document.getElementById('km-tantou').value=edit.tantou||'';
+    document.getElementById('km-score').value=edit.score||'';
+    document.getElementById('km-status').value=edit.status||'受注';
+    document.getElementById('km-kurikoshi').checked=!!edit.kurikoshi;
+    document.getElementById('km-note').value=edit.note||'';
+    allChanges=loadAllChangesFromKoji(edit);
+    awardHistory=JSON.parse(JSON.stringify(edit.awards||[])).map(a=>({...a,id:a.id||genId()}));
+  } else {
+    ['km-no','km-name','km-client','km-addr','km-price','km-price-tax','km-start','km-end',
+     'km-tanto','km-dairi','km-tantou','km-score','km-note'].forEach(fid=>document.getElementById(fid).value='');
+    document.getElementById('km-tax').value=10;
+    document.getElementById('km-status').value='受注';
+    document.getElementById('km-kurikoshi').checked=false;
+    allChanges=[];
+    awardHistory=[];
+  }
+  renderAllChanges();
+  renderAwardList();
+  document.getElementById('modal-koji').classList.add('open');
+}
+document.addEventListener('DOMContentLoaded',function(){
+  currentViewYear=getCurrentFiscalYear();
+  renderDashboard();
+  const priceEl=document.getElementById('km-price');
+  // フォーカス時: カンマを外して数字だけに
+  priceEl.addEventListener('focus',function(){
+    const n=unFmt(this.value);
+    this.value=n>0?String(n):'';
+  });
+  // 離れたとき: カンマ付きに戻す
+  priceEl.addEventListener('blur',function(){
+    const n=unFmt(this.value);
+    this.value=n>0?fmt(n):'';
+  });
+  priceEl.addEventListener('input',function(){
+    const p=unFmt(this.value);
+    const t=Number(document.getElementById('km-tax').value)||0;
+    const taxVal=Math.round(p*(1+t/100));
+    document.getElementById('km-price-tax').value=taxVal>0?fmt(taxVal):'';
+    renderAllChanges();
+  });
+  document.getElementById('km-tax').addEventListener('change',function(){
+    document.getElementById('km-price').dispatchEvent(new Event('input'));
+  });
+});
+function saveKoji(){
+  const no=document.getElementById('km-no').value.trim();
+  const name=document.getElementById('km-name').value.trim();
+  if(!no||!name){alert('工事番号と工事名は必須です');return}
+  const koji=DB.get('koji');
+  const editId=document.getElementById('koji-edit-id').value;
+  const data={
+    id:editId||Date.now().toString(),no,name,
+    client:document.getElementById('km-client').value,
+    addr:document.getElementById('km-addr').value,
+    price:unFmt(document.getElementById('km-price').value),
+    taxRate:Number(document.getElementById('km-tax').value)||10,
+    priceTax:unFmt(document.getElementById('km-price-tax').value),
+    start:document.getElementById('km-start').value,
+    end:document.getElementById('km-end').value,
+    tanto:document.getElementById('km-tanto').value,
+    dairi:document.getElementById('km-dairi').value,
+    tantou:document.getElementById('km-tantou').value,
+    score:document.getElementById('km-score').value,
+    status:document.getElementById('km-status').value,
+    kurikoshi:document.getElementById('km-kurikoshi').checked,
+    note:document.getElementById('km-note').value,
+    allChanges:JSON.parse(JSON.stringify(allChanges)),
+    awards:JSON.parse(JSON.stringify(awardHistory))
+  };
+  if(editId){
+    const idx=koji.findIndex(k=>k.id===editId);
+    if(idx>=0) koji[idx]=data;
+  } else {
+    if(koji.find(k=>k.no===no)){alert('その工事番号はすでに存在します');return}
+    koji.push(data);
+  }
+  DB.set('koji',koji);
+  closeModal('modal-koji');
+  renderKojiList();
+  populateKojiSelects();
+  renderDashboard();
+}
+function deleteKoji(id){
+  if(!confirm('この工事を削除しますか？\n関連する予算・原価データも削除されます。')) return;
+  const target=DB.get('koji').find(k=>k.id===id);
+  if(target&&target.awards){
+    target.awards.forEach(a=>{ if(a.id) localStorage.removeItem('award_pdf_'+id+'_'+a.id); });
+  }
+  deleteContractPdfsForKoji(id);
+  DB.set('koji',DB.get('koji').filter(k=>k.id!==id));
+  ['yosan_','genka_','seisan_','corins_'].forEach(p=>localStorage.removeItem(p+id));
+  renderKojiList();
+  renderDashboard();
+}
+function renderKojiList(){
+  const q=(document.getElementById('koji-search').value||'').toLowerCase();
+  const showAll=document.getElementById('list-all-years')?.checked;
+  const fy=currentViewYear;
+  const llEl=document.getElementById('list-year-label');
+  if(llEl) llEl.textContent=fyLabel(fy);
+  let koji=DB.get('koji');
+  if(!showAll) koji=koji.filter(k=>kojiInFiscalYear(k,fy));
+  if(q) koji=koji.filter(k=>k.no.toLowerCase().includes(q)||k.name.toLowerCase().includes(q));
+  const tbody=document.getElementById('koji-tbody');
+  if(koji.length===0){
+    tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;color:#999;padding:20px">${showAll?'工事が登録されていません':fyLabel(fy)+'の工事はありません'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=koji.map(k=>{
+    const latestPrice=getLatestPrice(k);
+    const latestEnd=getLatestEnd(k);
+    const allCh=k.allChanges||[];
+    const cCnt=allCh.length>0?allCh.filter(c=>c.type==='contract').length:(k.contractChanges||[]).length;
+    const pCnt=allCh.length>0?allCh.filter(c=>c.type==='period').length:(k.periodChanges||[]).length;
+    const totalCh=cCnt+pCnt;
+    const isKurikoshiIn=k.kurikoshi&&getKojiFiscalYear(k)===fy-1;
+    const diff=cCnt>0?latestPrice-(k.priceTax||0):0;
+    const apvSum=getKojiApvSummary(k.id);
+    const docTypes=[['yosan','予算'],['mitsumori','見積'],['gaichuu','外注'],['chumon','注文'],['genka','原価'],['seisan','精算']];
+    const apvCell=docTypes.map(([dt,lbl])=>{
+      const st=apvSum[dt]||'未提出';
+      return`<div class="apv-row"><span class="apv-label">${lbl}</span><span class="apv-chip apv-${st}" title="${lbl}：${st}" onclick="openApprovalModal('${k.id}','${dt}','')" style="font-size:10px;padding:1px 5px;cursor:pointer">${APV_EMOJI[st]||'📝'} ${st}</span></div>`;
+    }).join('');
+    return`<tr${isKurikoshiIn?' style="background:#fffbf0"':''}>
+      <td>${k.no}${isKurikoshiIn?'<span class="badge badge-yellow" style="margin-left:4px">繰越</span>':''}</td>
+      <td><strong>${k.name}</strong>${showAll?`<div style="font-size:11px;color:#888">${fyLabel(getKojiFiscalYear(k))}</div>`:''}
+      </td>
+      <td>${k.client||''}</td>
+      <td class="num">${fmt(latestPrice)}円${cCnt>0?`<div style="font-size:11px;color:${diff>=0?'var(--success)':'var(--danger)'}">当初比 ${(diff>=0?'+':'')+fmt(diff)}円</div>`:''}</td>
+      <td style="text-align:center;font-size:11px">${totalCh>0?`<span class="badge badge-blue">計${totalCh}回</span>${cCnt>0?`<div>契約${cCnt}回</div>`:''}${pCnt>0?`<div>工期${pCnt}回</div>`:''}`:'<span style="color:#ccc">—</span>'}</td>
+      <td style="text-align:center">${k.score||'—'}</td>
+      <td style="font-size:12px">${k.start||''}</td>
+      <td style="font-size:12px">${latestEnd}${pCnt>0?'<span style="font-size:10px;color:var(--danger)"> ✎変</span>':''}</td>
+      <td style="font-size:12px">${k.tanto||''}</td>
+      <td>${statusBadge(k.status)}${(k.awards&&k.awards.length>0)?`<span class="badge badge-yellow" style="margin-left:4px">🏆${k.awards.length}</span>`:''}</td>
+      <td><div class="apv-grid">${apvCell}</div></td>
+      <td style="white-space:nowrap;min-width:160px">
+        <button class="btn btn-light btn-sm" onclick="openKojiModal('${k.id}')">編集</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteKoji('${k.id}')">削除</button><br style="margin:2px 0">
+        <button class="btn btn-sm" style="background:#e8f0ff;color:#1a5276;border:1px solid #aac0f0;margin-top:4px;width:100%" onclick="openContractPdfsModal('${k.id}')">📄 契約書${(()=>{const n=getContractPdfCount(k.id);return n>0?`<span class='corins-count-badge'>${n}件</span>`:''})()}</button>
+        <button class="btn btn-sm" style="background:#e8f4fd;color:#1a5276;border:1px solid #aad4f0;margin-top:4px;width:100%" onclick="openCorinsModal('${k.id}')">📄 コリンズ${(()=>{const n=getCorinsImages(k.id).length;return n>0?`<span class='corins-count-badge'>${n}件</span>`:''})()} </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+</script>
+<script>
+// ===== 実行予算書 =====
+let yosanData=null;
+let yosanLines=[];
+const YOSAN_CATS=['直接工事費','共通仮設費'];
+
+function loadYosan(){
+  const kid=document.getElementById('yosan-koji-sel').value;
+  const cont=document.getElementById('yosan-content');
+  if(!kid){cont.style.display='none';return}
+  const koji=DB.get('koji').find(k=>k.id===kid);
+  if(!koji) return;
+  document.getElementById('y-no').value=koji.no;
+  document.getElementById('y-name').value=koji.name;
+  document.getElementById('y-client').value=koji.client||'';
+  const latestP=getLatestPrice(koji);
+  const hasContractChg=(koji.allChanges||[]).some(c=>c.type==='contract')||(koji.contractChanges||[]).length>0;
+  document.getElementById('y-ukeoikin').value=fmt(latestP)+'円'+(hasContractChg?' (変更後)':'');
+  document.getElementById('y-addr').value=koji.addr||'';
+  document.getElementById('y-start').value=koji.start||'';
+  document.getElementById('y-end').value=getLatestEnd(koji)||'';
+  document.getElementById('y-tanto').value=koji.tanto||'';
+  document.getElementById('y-dairi').value=koji.dairi||'';
+  document.getElementById('y-tantou').value=koji.tantou||'';
+  const saved=DB.getObj('yosan_'+kid);
+  if(saved.versions&&saved.versions.length>0){
+    yosanData=saved;
+  } else if(saved.lines){
+    yosanData={currentVersionIdx:0,versions:[{
+      rev:saved.rev||'第1版',date:saved.date||today(),author:saved.author||koji.tanto||'',note:'',
+      lines:(saved.lines||[]).map(l=>({
+        id:genId(),category:'直接工事費',koushu:l.koumoku||'未分類',
+        shubetsu:'',tekiyo:l.tekiyo||'',qty:l.qty||'',tani:l.tani||'式',
+        tanka:unFmt(l.tanka),kin:unFmt(l.kin)
+      }))
+    }]};
+  } else {
+    yosanData={currentVersionIdx:0,versions:[{
+      rev:'第1版',date:today(),author:koji.tanto||'',note:'',
+      lines:[
+        {id:genId(),category:'直接工事費',koushu:'土工',shubetsu:'掘削工',tekiyo:'',qty:'',tani:'m³',tanka:'',kin:0},
+        {id:genId(),category:'直接工事費',koushu:'土工',shubetsu:'盛土工',tekiyo:'',qty:'',tani:'m³',tanka:'',kin:0},
+        {id:genId(),category:'直接工事費',koushu:'舗装工',shubetsu:'路盤工',tekiyo:'',qty:'',tani:'m²',tanka:'',kin:0},
+        {id:genId(),category:'共通仮設費',koushu:'準備費',shubetsu:'仮設道路',tekiyo:'',qty:'',tani:'式',tanka:'',kin:0}
+      ]
+    }]};
+  }
+  yosanLines=yosanData.versions[yosanData.currentVersionIdx].lines;
+  renderYosanVersionSelect();
+  renderYosanVersionInfo();
+  renderYosanLines();
+  cont.style.display='block';
+}
+
+function renderYosanVersionSelect(){
+  const sel=document.getElementById('y-version-sel');
+  const idx=yosanData.currentVersionIdx;
+  sel.innerHTML=yosanData.versions.map((v,i)=>
+    `<option value="${i}"${i===idx?' selected':''}>${escHtml(v.rev||'版'+(i+1))}（${v.date||'日付未設定'}）</option>`
+  ).join('');
+  document.getElementById('y-version-count').textContent=`全 ${yosanData.versions.length} 版`;
+  document.getElementById('y-del-ver-btn').disabled=yosanData.versions.length<=1;
+  const db=document.getElementById('y-diff-btn');if(db)db.disabled=yosanData.currentVersionIdx===0;
+}
+
+function renderYosanVersionInfo(){
+  const v=yosanData.versions[yosanData.currentVersionIdx];
+  document.getElementById('y-rev').value=v.rev||'';
+  document.getElementById('y-date').value=v.date||'';
+  document.getElementById('y-author').value=v.author||'';
+  document.getElementById('y-note').value=v.note||'';
+  document.getElementById('y-description').value=v.description||'';
+  gaichuuYotei=JSON.parse(JSON.stringify(v.gaichuuYotei||[]));
+  renderGaichuuYotei();
+  progressSchedule=JSON.parse(JSON.stringify(v.progressSchedule||[]));
+  renderProgressSchedule();
+}
+
+function updateYosanVersionMeta(){
+  if(!yosanData) return;
+  const v=yosanData.versions[yosanData.currentVersionIdx];
+  v.rev=document.getElementById('y-rev').value;
+  v.date=document.getElementById('y-date').value;
+  v.author=document.getElementById('y-author').value;
+  v.note=document.getElementById('y-note').value;
+  v.description=document.getElementById('y-description').value;
+  v.gaichuuYotei=gaichuuYotei;
+  v.progressSchedule=progressSchedule;
+  renderYosanVersionSelect();
+}
+
+function switchYosanVersion(){
+  const idx=parseInt(document.getElementById('y-version-sel').value)||0;
+  yosanData.currentVersionIdx=idx;
+  yosanLines=yosanData.versions[idx].lines;
+  renderYosanVersionInfo();
+  renderYosanLines();
+}
+
+function addYosanVersion(){
+  const curV=yosanData.versions[yosanData.currentVersionIdx];
+  const nv={rev:'第'+(yosanData.versions.length+1)+'版',date:today(),author:curV.author||'',note:'',lines:JSON.parse(JSON.stringify(curV.lines))};
+  yosanData.versions.push(nv);
+  yosanData.currentVersionIdx=yosanData.versions.length-1;
+  yosanLines=nv.lines;
+  renderYosanVersionSelect();
+  renderYosanVersionInfo();
+  renderYosanLines();
+}
+
+function deleteYosanVersion(){
+  if(yosanData.versions.length<=1){alert('最低1版は必要です');return}
+  if(!confirm('「'+yosanData.versions[yosanData.currentVersionIdx].rev+'」を削除しますか？')) return;
+  yosanData.versions.splice(yosanData.currentVersionIdx,1);
+  yosanData.currentVersionIdx=Math.min(yosanData.currentVersionIdx,yosanData.versions.length-1);
+  yosanLines=yosanData.versions[yosanData.currentVersionIdx].lines;
+  renderYosanVersionSelect();
+  renderYosanVersionInfo();
+  renderYosanLines();
+}
+
+function renderYosanLines(){
+  const tbody=document.getElementById('yosan-lines');
+  if(!tbody) return;
+  const grand=yosanLines.reduce((s,l)=>s+(l.kin||0),0);
+  let html='';
+  YOSAN_CATS.forEach(cat=>{
+    const cLines=yosanLines.filter(l=>l.category===cat);
+    if(!cLines.length) return;
+    const cTotal=cLines.reduce((s,l)=>s+(l.kin||0),0);
+    html+=`<tr style="background:var(--primary);color:#fff"><td colspan="9" style="padding:7px 14px;font-weight:bold;font-size:13px;letter-spacing:.5px">▶ ${cat}</td></tr>`;
+    const kList=[...new Set(cLines.map(l=>l.koushu))];
+    kList.forEach(koushu=>{
+      const kLines=cLines.filter(l=>l.koushu===koushu);
+      const kTotal=kLines.reduce((s,l)=>s+(l.kin||0),0);
+      html+=`<tr style="background:#dce8f5"><td colspan="5" style="padding:5px 14px;font-weight:bold;font-size:12px;color:var(--primary)">　【${escHtml(koushu)}】</td><td></td><td style="text-align:right;font-size:12px;color:#555;padding:5px 8px">小計 ${fmt(kTotal)}円</td><td></td><td style="text-align:center"><button class="del-btn" style="font-size:10px;color:#aaa" onclick="deleteYosanKoushu(${JSON.stringify(cat)},${JSON.stringify(koushu)})" title="工種ごと削除">✕工種</button></td></tr>`;
+      kLines.forEach(l=>{
+        const idx=yosanLines.indexOf(l);
+        const pct=grand>0?Math.round((l.kin||0)/grand*100):0;
+        html+=`<tr>
+          <td style="color:#bbb;font-size:11px;padding:4px 8px;white-space:nowrap;overflow:hidden">${escHtml(koushu)}</td>
+          <td><input value="${escHtml(l.shubetsu||'')}" style="width:100%;border:none;background:transparent;font-size:13px" placeholder="種別" oninput="yosanLines[${idx}].shubetsu=this.value"></td>
+          <td><input value="${escHtml(l.tekiyo||'')}" style="width:100%;border:none;background:transparent;font-size:13px" oninput="yosanLines[${idx}].tekiyo=this.value"></td>
+          <td><input value="${l.qty?fmt(l.qty):''}" style="text-align:right;width:100%;border:none;background:transparent;font-size:13px" onfocus="this.value=this.value.replace(/,/g,'')" oninput="yosanLines[${idx}].qty=parseFloat(this.value.replace(/,/g,''))||0;calcYosanLineByIdx(${idx})" onblur="this.value=yosanLines[${idx}].qty?fmt(yosanLines[${idx}].qty):'';renderYosanLines()"></td>
+          <td><input value="${escHtml(l.tani||'')}" style="width:100%;border:none;background:transparent;font-size:13px" oninput="yosanLines[${idx}].tani=this.value"></td>
+          <td><input value="${fmt(l.tanka||0)}" style="text-align:right;width:100%;border:none;background:transparent;font-size:13px" onfocus="this.value=this.value.replace(/,/g,'')" oninput="yosanLines[${idx}].tanka=unFmt(this.value);calcYosanLineByIdx(${idx})" onblur="this.value=fmt(yosanLines[${idx}].tanka||0);renderYosanLines()"></td>
+          <td><input id="yk-${idx}" value="${fmt(l.kin||0)}" style="text-align:right;width:100%;border:none;background:transparent;font-size:13px;font-weight:bold" oninput="yosanLines[${idx}].kin=unFmt(this.value);refreshYosanTotals()" onblur="renderYosanLines()"></td>
+          <td style="text-align:center;font-size:11px;color:#888">${pct>0?pct+'%':''}</td>
+          <td><button class="del-btn" onclick="delYosanLine(${idx})">✕</button></td>
+        </tr>`;
+      });
+    });
+    html+=`<tr style="background:#e0f0e0;font-weight:bold"><td colspan="5" style="text-align:right;padding:7px 14px;color:var(--primary)">${cat}計</td><td></td><td style="text-align:right;padding:7px 8px;color:var(--primary)">${fmt(cTotal)}円</td><td colspan="2"></td></tr>`;
+  });
+  tbody.innerHTML=html;
+  // tfoot 再生成
+  const table=document.getElementById('yosan-table');
+  let tf=table.querySelector('tfoot');
+  if(tf) tf.remove();
+  const kid=document.getElementById('yosan-koji-sel').value;
+  const koji=kid?DB.get('koji').find(k=>k.id===kid):null;
+  const ukeoi=koji?getLatestPrice(koji):0;
+  const profit=ukeoi-grand;
+  const pRate=ukeoi>0?Math.round(profit/ukeoi*1000)/10:0;
+  const cRate=ukeoi>0?Math.round(grand/ukeoi*100):0;
+  tf=document.createElement('tfoot');
+  tf.innerHTML=`<tr class="total-row"><td colspan="5" style="text-align:right;padding:8px 12px">合計</td><td></td><td id="yt-grand" class="num" style="padding:8px 12px">${fmt(grand)}円</td><td id="yt-crate" style="text-align:center">${cRate>0?cRate+'%':''}</td><td></td></tr>
+    <tr style="background:#fff8e1"><td colspan="5" style="text-align:right;padding:8px 12px">粗利益（請負金額－合計）</td><td></td><td id="yt-profit" class="num" style="padding:8px 12px;color:${profit>=0?'var(--success)':'var(--danger)'}">${fmt(profit)}円</td><td id="yt-prate" style="text-align:center;color:${profit>=0?'var(--success)':'var(--danger)'}">${ukeoi>0?pRate+'%':''}</td><td></td></tr>`;
+  table.appendChild(tf);
+}
+
+function calcYosanLineByIdx(i){
+  const l=yosanLines[i];
+  l.kin=Math.round((parseFloat(l.qty)||0)*(parseFloat(String(l.tanka).replace(/,/g,''))||0));
+  const el=document.getElementById('yk-'+i);
+  if(el) el.value=fmt(l.kin);
+  refreshYosanTotals();
+}
+function refreshYosanTotals(){
+  const grand=yosanLines.reduce((s,l)=>s+(l.kin||0),0);
+  const kid=document.getElementById('yosan-koji-sel').value;
+  const koji=kid?DB.get('koji').find(k=>k.id===kid):null;
+  const ukeoi=koji?getLatestPrice(koji):0;
+  const profit=ukeoi-grand;
+  const pRate=ukeoi>0?Math.round(profit/ukeoi*1000)/10:0;
+  const cRate=ukeoi>0?Math.round(grand/ukeoi*100):0;
+  const eg=document.getElementById('yt-grand');if(eg) eg.textContent=fmt(grand)+'円';
+  const ec=document.getElementById('yt-crate');if(ec) ec.textContent=cRate>0?cRate+'%':'';
+  const ep=document.getElementById('yt-profit');
+  if(ep){ep.textContent=fmt(profit)+'円';ep.style.color=profit>=0?'var(--success)':'var(--danger)';}
+  const epr=document.getElementById('yt-prate');
+  if(epr){epr.textContent=ukeoi>0?pRate+'%':'';epr.style.color=profit>=0?'var(--success)':'var(--danger)';}
+}
+
+function addYosanLine(){
+  const cat=document.getElementById('y-add-cat').value;
+  const koushu=(document.getElementById('y-add-koushu').value.trim())||'未分類';
+  yosanLines.push({id:genId(),category:cat,koushu:koushu,shubetsu:'',tekiyo:'',qty:'',tani:'式',tanka:'',kin:0});
+  renderYosanLines();
+  setTimeout(()=>{const tb=document.getElementById('yosan-lines');if(tb)tb.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'})},50);
+}
+
+function delYosanLine(i){
+  if(!confirm('この行を削除しますか？')) return;
+  yosanLines.splice(i,1);
+  renderYosanLines();
+}
+
+function deleteYosanKoushu(cat,koushu){
+  const cnt=yosanLines.filter(l=>l.category===cat&&l.koushu===koushu).length;
+  if(!confirm('【'+koushu+'】の'+cnt+'行をすべて削除しますか？')) return;
+  for(let i=yosanLines.length-1;i>=0;i--){
+    if(yosanLines[i].category===cat&&yosanLines[i].koushu===koushu) yosanLines.splice(i,1);
+  }
+  renderYosanLines();
+}
+
+function openYosanDiff(){
+  if(yosanData.currentVersionIdx===0){alert('第1版のため比較する前版がありません');return;}
+  const curIdx=yosanData.currentVersionIdx;
+  const curV=yosanData.versions[curIdx];
+  const prevV=yosanData.versions[curIdx-1];
+  const prevMap={};prevV.lines.forEach(function(l){prevMap[l.id]=l;});
+  const curMap={};curV.lines.forEach(function(l){curMap[l.id]=l;});
+  const prevTotal=prevV.lines.reduce(function(s,l){return s+(l.kin||0);},0);
+  const curTotal=curV.lines.reduce(function(s,l){return s+(l.kin||0);},0);
+  const delta=curTotal-prevTotal;
+  const allIds=[...new Set([...prevV.lines.map(function(l){return l.id;}), ...curV.lines.map(function(l){return l.id;})])];
+  let rows='';
+  allIds.forEach(function(id){
+    const p=prevMap[id];const c=curMap[id];
+    if(!p&&c){
+      rows+='<tr style="background:#e8f5e9">'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:center"><span style="color:green;font-weight:bold">新規</span></td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(c.category)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(c.koushu)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(c.shubetsu||'')+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(c.tekiyo||'')+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:#aaa">—</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:green;font-weight:bold">'+(c.qty?fmt(c.qty):'')+' '+escHtml(c.tani||'')+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:#aaa">—</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:green;font-weight:bold">'+fmt(c.tanka||0)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:green">+'+fmt(c.kin||0)+'円</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;font-weight:bold">'+fmt(c.kin||0)+'円</td>'
+        +'</tr>';
+    } else if(p&&!c){
+      rows+='<tr style="background:#ffebee">'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:center"><span style="color:red;font-weight:bold">削除</span></td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(p.category)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(p.koushu)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd"><s>'+escHtml(p.shubetsu||'')+'</s></td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd"><s>'+escHtml(p.tekiyo||'')+'</s></td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:#aaa">'+(p.qty?fmt(p.qty):'')+' '+escHtml(p.tani||'')+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:#aaa">—</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:#aaa">'+fmt(p.tanka||0)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:#aaa">—</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:red">-'+fmt(p.kin||0)+'円</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;color:#bbb"><s>'+fmt(p.kin||0)+'円</s></td>'
+        +'</tr>';
+    } else if(p&&c){
+      const qtyChanged=String(p.qty)!==String(c.qty);
+      const tankaChanged=(p.tanka||0)!==(c.tanka||0);
+      const changed=qtyChanged||tankaChanged||p.shubetsu!==c.shubetsu||p.tekiyo!==c.tekiyo;
+      const kinDelta=(c.kin||0)-(p.kin||0);
+      const bg=changed?'#fff8e1':'#fff';
+      const label=changed?'<span style="color:#f57c00;font-weight:bold">変更</span>':'<span style="color:#bbb">変更なし</span>';
+      rows+='<tr style="background:'+bg+'">'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:center">'+label+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(c.category)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(c.koushu)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(c.shubetsu||'')+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd">'+escHtml(c.tekiyo||'')+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right'+(qtyChanged?';color:#f57c00;font-weight:bold':';color:#888')+'">'+(p.qty?fmt(p.qty):'')+' '+escHtml(p.tani||'')+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right'+(qtyChanged?';color:green;font-weight:bold':'')+'">'+(c.qty?fmt(c.qty):'')+' '+escHtml(c.tani||'')+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right'+(tankaChanged?';color:#f57c00;font-weight:bold':';color:#888')+'">'+fmt(p.tanka||0)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right'+(tankaChanged?';color:green;font-weight:bold':'')+'">'+fmt(c.tanka||0)+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;font-size:12px">'+( changed&&kinDelta!==0?(kinDelta>0?'<span style="color:red">+'+fmt(kinDelta)+'円</span>':'<span style="color:green">'+fmt(kinDelta)+'円</span>'):'')+'</td>'
+        +'<td style="padding:6px 8px;border:1px solid #ddd;text-align:right;font-weight:bold">'+fmt(c.kin||0)+'円</td>'
+        +'</tr>';
+    }
+  });
+  document.getElementById('yosan-diff-body').innerHTML=rows;
+  document.getElementById('yosan-diff-prev-name').textContent=prevV.rev+'（'+prevV.date+'）';
+  document.getElementById('yosan-diff-cur-name').textContent=curV.rev+'（'+curV.date+'）';
+  document.getElementById('yosan-diff-prev-total').textContent=fmt(prevTotal)+'円';
+  document.getElementById('yosan-diff-cur-total').textContent=fmt(curTotal)+'円';
+  const de=document.getElementById('yosan-diff-delta');
+  de.textContent=(delta>=0?'+':'')+fmt(delta)+'円';
+  de.style.color=delta>0?'red':delta<0?'green':'inherit';
+  document.getElementById('modal-yosan-diff').classList.add('open');
+}
+
+
+function saveYosan(){
+  const kid=document.getElementById('yosan-koji-sel').value;
+  if(!kid) return;
+  updateYosanVersionMeta();
+  DB.set('yosan_'+kid,yosanData);
+  alert('実行予算書を保存しました');
+}
+
+// ===== 実行予算書 外注予定先 =====
+let gaichuuYotei=[];
+
+function renderGaichuuYotei(){
+  const tbody=document.getElementById('gaichuu-yotei-lines');
+  if(!tbody) return;
+  if(gaichuuYotei.length===0){
+    tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:#aaa;padding:8px;font-size:12px">外注予定先が登録されていません</td></tr>';
+    return;
+  }
+  tbody.innerHTML=gaichuuYotei.map((r,i)=>`<tr>
+    <td><input value="${escHtml(r.company||'')}" placeholder="会社名" style="width:100%;border:none;background:transparent;font-size:13px" oninput="gaichuuYotei[${i}].company=this.value;syncGaichuuYotei()"></td>
+    <td><input value="${escHtml(r.koushu||'')}" placeholder="例：土工、舗装工" style="width:100%;border:none;background:transparent;font-size:13px" oninput="gaichuuYotei[${i}].koushu=this.value;syncGaichuuYotei()"></td>
+    <td><button class="del-btn" onclick="delGaichuuYotei(${i})">✕</button></td>
+  </tr>`).join('');
+}
+
+function addGaichuuYotei(){
+  gaichuuYotei.push({company:'',koushu:''});
+  renderGaichuuYotei();
+  syncGaichuuYotei();
+}
+
+function delGaichuuYotei(i){
+  gaichuuYotei.splice(i,1);
+  renderGaichuuYotei();
+  syncGaichuuYotei();
+}
+
+function syncGaichuuYotei(){
+  if(!yosanData) return;
+  yosanData.versions[yosanData.currentVersionIdx].gaichuuYotei=gaichuuYotei;
+}
+
+// ===== 実行予算書 工事進捗予定 =====
+let progressSchedule=[];
+
+function renderProgressSchedule(){
+  const wrap=document.getElementById('progress-sched-wrap');
+  if(!wrap) return;
+  if(progressSchedule.length===0){
+    wrap.innerHTML='<p style="text-align:center;color:#aaa;font-size:12px;padding:8px 0">＋ ボタンで月を追加できます</p>';
+    return;
+  }
+  const thStyle='padding:5px 4px;text-align:center;font-size:11px;background:#1e6b3a;color:#fff;white-space:nowrap;position:relative;min-width:68px';
+  const tdBase='padding:4px 3px;text-align:center;font-size:12px';
+  const inpStyle='border:1px solid #b0d0b8;border-radius:3px;padding:3px 2px;font-size:12px;font-family:inherit;width:56px;text-align:center;background:#fff';
+
+  // ヘッダー行（年/月 手入力）
+  const hInp='border:none;border-bottom:1px solid rgba(255,255,255,0.5);background:transparent;color:#fff;text-align:center;font-family:inherit;outline:none';
+  const headers=progressSchedule.map((r,i)=>`
+    <th style="${thStyle}">
+      <div style="display:flex;align-items:center;justify-content:center;gap:1px;padding-right:10px">
+        <input type="number" value="${r.year||''}" placeholder="年" min="2000" max="2099" style="${hInp};width:36px;font-size:10px"
+          oninput="progressSchedule[${i}].year=this.value;syncProgressSchedule()">
+        <span style="font-size:10px;opacity:0.7">/</span>
+        <input type="number" value="${r.month||''}" placeholder="月" min="1" max="12" style="${hInp};width:22px;font-size:11px"
+          oninput="progressSchedule[${i}].month=this.value;syncProgressSchedule()">
+        <span style="font-size:10px;opacity:0.7">月</span>
+      </div>
+      <button onclick="delProgressSchedule(${i})" style="position:absolute;top:2px;right:2px;background:none;border:none;color:rgba(255,255,255,0.55);cursor:pointer;font-size:9px;padding:0;line-height:1">✕</button>
+    </th>`).join('');
+
+  // 月次入力行
+  const rateInputs=progressSchedule.map((r,i)=>`
+    <td style="${tdBase}">
+      <input type="number" id="ps-rate-${i}" value="${r.rate!==''&&r.rate!=null?r.rate:''}" placeholder="0" min="0" max="100"
+        style="${inpStyle}" oninput="progressSchedule[${i}].rate=this.value;syncProgressSchedule();updateProgressCumulative()">
+    </td>`).join('');
+
+  // 累計行（初期値計算）
+  let cum=0;
+  const cumCells=progressSchedule.map((r,i)=>{
+    cum+=Number(r.rate)||0;
+    const color=cum>100?'#c0392b':cum===100?'#1e6b3a':'#2e7d52';
+    return `<td id="ps-cum-${i}" style="${tdBase};font-weight:bold;color:${color}">${cum}%</td>`;
+  }).join('');
+
+  wrap.innerHTML=`
+    <table style="border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr>
+          <th style="padding:5px 8px;text-align:left;background:#2e7d52;color:#fff;font-size:11px;white-space:nowrap;min-width:44px">年月</th>
+          ${headers}
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:#f6fff8">
+          <td style="padding:4px 8px;font-size:11px;font-weight:bold;color:#555;white-space:nowrap">月次%</td>
+          ${rateInputs}
+        </tr>
+        <tr style="background:#e1f5e8">
+          <td style="padding:4px 8px;font-size:11px;font-weight:bold;color:#1e6b3a;white-space:nowrap">累計%</td>
+          ${cumCells}
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+function updateProgressCumulative(){
+  let cum=0;
+  progressSchedule.forEach((r,i)=>{
+    cum+=Number(r.rate)||0;
+    const el=document.getElementById('ps-cum-'+i);
+    if(!el) return;
+    el.textContent=cum+'%';
+    el.style.color=cum>100?'#c0392b':cum===100?'#1e6b3a':'#2e7d52';
+  });
+}
+
+function _nextYearMonth(){
+  if(progressSchedule.length===0){
+    const now=new Date();
+    return {year:now.getFullYear(),month:now.getMonth()+1};
+  }
+  const last=progressSchedule[progressSchedule.length-1];
+  let y=Number(last.year)||new Date().getFullYear();
+  let m=Number(last.month)||12;
+  m++;if(m>12){m=1;y++;}
+  return {year:y,month:m};
+}
+
+function addProgressSchedule(){
+  const {year,month}=_nextYearMonth();
+  progressSchedule.push({year,month,rate:''});
+  renderProgressSchedule();
+  syncProgressSchedule();
+}
+
+function addProgressSchedule12(){
+  const start=_nextYearMonth();
+  let y=start.year,m=start.month;
+  for(let i=0;i<12;i++){
+    progressSchedule.push({year:y,month:m,rate:''});
+    m++;if(m>12){m=1;y++;}
+  }
+  renderProgressSchedule();
+  syncProgressSchedule();
+}
+
+function clearProgressSchedule(){
+  if(!confirm('進捗予定をすべて削除しますか？')) return;
+  progressSchedule=[];
+  renderProgressSchedule();
+  syncProgressSchedule();
+}
+
+function delProgressSchedule(i){
+  progressSchedule.splice(i,1);
+  renderProgressSchedule();
+  syncProgressSchedule();
+}
+
+function syncProgressSchedule(){
+  if(!yosanData) return;
+  yosanData.versions[yosanData.currentVersionIdx].progressSchedule=progressSchedule;
+}
+
+function printYosan(){
+  const kid=document.getElementById('yosan-koji-sel').value;
+  if(!kid){alert('工事を選択してください');return}
+  updateYosanVersionMeta();
+  const koji=DB.get('koji').find(k=>k.id===kid);
+  const v=yosanData.versions[yosanData.currentVersionIdx];
+  const ukeoi=getLatestPrice(koji);
+  let tbl='';let grand=0;
+  YOSAN_CATS.forEach(cat=>{
+    const cLines=yosanLines.filter(l=>l.category===cat);
+    if(!cLines.length) return;
+    tbl+=`<tr style="background:#1a5276;color:#fff"><td colspan="7" style="padding:8px;border:1px solid #999;font-weight:bold">${cat}</td></tr>`;
+    [...new Set(cLines.map(l=>l.koushu))].forEach(k=>{
+      const kl=cLines.filter(l=>l.koushu===k);
+      const kt=kl.reduce((s,l)=>s+(l.kin||0),0);
+      tbl+=`<tr style="background:#dce8f5"><td colspan="5" style="padding:6px 10px;border:1px solid #ddd;font-weight:bold">【${k}】</td><td colspan="2" style="padding:6px 10px;border:1px solid #ddd;text-align:right">小計: ${fmt(kt)}円</td></tr>`;
+      kl.forEach(l=>{tbl+=`<tr><td style="padding:7px;border:1px solid #ddd">${l.shubetsu||''}</td><td style="padding:7px;border:1px solid #ddd">${l.tekiyo||''}</td><td style="padding:7px;border:1px solid #ddd;text-align:right">${l.qty||''}</td><td style="padding:7px;border:1px solid #ddd;text-align:center">${l.tani||''}</td><td style="padding:7px;border:1px solid #ddd;text-align:right">${fmt(l.tanka||0)}</td><td colspan="2" style="padding:7px;border:1px solid #ddd;text-align:right;font-weight:bold">${fmt(l.kin||0)}</td></tr>`});
+    });
+    const ct=cLines.reduce((s,l)=>s+(l.kin||0),0);grand+=ct;
+    tbl+=`<tr style="background:#e0f0e0;font-weight:bold"><td colspan="5" style="padding:8px;border:1px solid #999;text-align:right">${cat}計</td><td colspan="2" style="padding:8px;border:1px solid #999;text-align:right">${fmt(ct)}円</td></tr>`;
+  });
+  const profit=ukeoi-grand;
+  const latestEnd=getLatestEnd(koji);
+  const html=buildPrintDoc('実行予算書',koji,
+    `<div style="margin:8px 0 12px;font-size:12px;background:#f5f7ff;border:1px solid #c0d0f0;border-radius:4px;padding:8px 12px">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px;margin-bottom:6px">
+        <div><span style="color:#888">現場所在地：</span>${koji.addr||''}</div>
+        <div><span style="color:#888">着工日：</span>${koji.start||''}</div>
+        <div><span style="color:#888">完工予定日：</span>${latestEnd||''}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        <div><span style="color:#888">監理技術者：</span>${koji.tanto||''}</div>
+        <div><span style="color:#888">現場代理人：</span>${koji.dairi||''}</div>
+        <div><span style="color:#888">担当：</span>${koji.tantou||''}</div>
+      </div>
+    </div>
+    <p style="margin-bottom:8px;font-size:12px">版：${v.rev}　作成日：${v.date}　作成者：${v.author}${v.note?'　変更理由：'+v.note:''}</p>
+    ${v.description?`<div style="background:#f8f9ff;border:1px solid #d0d8f0;border-radius:4px;padding:8px 12px;margin-bottom:12px;font-size:12px"><strong style="color:#1a5276">工事説明</strong><p style="margin-top:4px;white-space:pre-wrap">${escHtml(v.description)}</p></div>`:''}
+    ${gaichuuYotei.filter(r=>r.company||r.koushu).length>0?`<div style="margin-bottom:12px"><strong style="font-size:12px;color:#7d4a00">外注予定先</strong><table style="border-collapse:collapse;margin-top:6px;font-size:12px"><thead><tr><th style="padding:5px 10px;border:1px solid #999;background:#7d4a00;color:#fff;text-align:left">会社名</th><th style="padding:5px 10px;border:1px solid #999;background:#7d4a00;color:#fff;text-align:left">工種</th></tr></thead><tbody>${gaichuuYotei.filter(r=>r.company||r.koushu).map(r=>`<tr><td style="padding:5px 10px;border:1px solid #ddd">${escHtml(r.company||'')}</td><td style="padding:5px 10px;border:1px solid #ddd">${escHtml(r.koushu||'')}</td></tr>`).join('')}</tbody></table></div>`:''}
+    ${(()=>{
+      if(!progressSchedule.length) return '';
+      const th=r=>`<th style="padding:5px 6px;border:1px solid #999;background:#1e6b3a;color:#fff;text-align:center;font-size:11px;white-space:nowrap">${r}</th>`;
+      const td=(v,bold)=>`<td style="padding:5px 6px;border:1px solid #ddd;text-align:center;font-size:11px${bold?';font-weight:bold;background:#e8f5e9':''}">${v}</td>`;
+      let cum=0;
+      const heads=progressSchedule.map(r=>th(`${r.year||''}/${r.month||''}月`)).join('');
+      const rates=progressSchedule.map(r=>td(r.rate!==''&&r.rate!=null?r.rate+'%':'-')).join('');
+      const cums=progressSchedule.map(r=>{cum+=Number(r.rate)||0;return td(cum+'%',true);}).join('');
+      return `<div style="margin-bottom:12px"><strong style="font-size:12px;color:#1e6b3a">工事進捗予定</strong><div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;font-size:11px"><thead><tr>${th('項目')}${heads}</tr></thead><tbody><tr><td style="padding:5px 6px;border:1px solid #ddd;font-size:11px;font-weight:bold;white-space:nowrap">月次%</td>${rates}</tr><tr style="background:#e8f5e9"><td style="padding:5px 6px;border:1px solid #ddd;font-size:11px;font-weight:bold;white-space:nowrap;color:#1e6b3a">累計%</td>${cums}</tr></tbody></table></div></div>`;
+    })()}
+    <table style="width:100%;border-collapse:collapse">
+      <tr style="background:#1a5276;color:#fff"><th style="padding:8px;border:1px solid #999">種別</th><th style="padding:8px;border:1px solid #999">摘要</th><th style="padding:8px;border:1px solid #999">数量</th><th style="padding:8px;border:1px solid #999">単位</th><th style="padding:8px;border:1px solid #999">単価</th><th colspan="2" style="padding:8px;border:1px solid #999">金額</th></tr>
+      ${tbl}
+      <tr style="background:#f0f8e8;font-weight:bold"><td colspan="5" style="padding:8px;border:1px solid #999;text-align:right">合計</td><td colspan="2" style="padding:8px;border:1px solid #999;text-align:right">${fmt(grand)}円</td></tr>
+      <tr style="background:#fff8e1;font-weight:bold"><td colspan="5" style="padding:8px;border:1px solid #999;text-align:right">粗利益（請負金額－合計）</td><td colspan="2" style="padding:8px;border:1px solid #999;text-align:right;color:${profit>=0?'green':'red'}">${fmt(profit)}円</td></tr>
+    </table>`
+  );
+  openPrint(html);
+}
+
+// ===== 見積書 =====
+let mLines=[];
+function openMitsumoriModal(id){
+  populateKojiSelects();
+  const edit=id?DB.get('mitsumori').find(x=>x.id===id):null;
+  document.getElementById('m-modal-title').textContent=edit?'見積書編集':'見積書作成';
+  document.getElementById('m-edit-id').value=id||'';
+  if(edit){
+    document.getElementById('mm-no').value=edit.no;
+    document.getElementById('mm-koji').value=edit.kojiId||'';
+    document.getElementById('mm-atesaki').value=edit.atesaki||'';
+    document.getElementById('mm-title').value=edit.title||'';
+    document.getElementById('mm-date').value=edit.date||'';
+    document.getElementById('mm-expiry').value=edit.expiry||'';
+    document.getElementById('mm-author').value=edit.author||'';
+    document.getElementById('mm-payment').value=edit.payment||'';
+    document.getElementById('mm-status').value=edit.status||'提出前';
+    document.getElementById('mm-note').value=edit.note||'';
+    mLines=edit.lines||[];
+  } else {
+    document.getElementById('mm-no').value=nextNo('mitsumori','M');
+    ['mm-atesaki','mm-title','mm-expiry','mm-author','mm-payment','mm-note'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('mm-date').value=today();
+    document.getElementById('mm-status').value='提出前';
+    document.getElementById('mm-koji').value='';
+    mLines=[{item:'',tekiyo:'',qty:'',tani:'式',tanka:'',kin:''}];
+  }
+  renderMLines();
+  document.getElementById('modal-mitsumori').classList.add('open');
+}
+function renderMLines(){
+  document.getElementById('m-lines').innerHTML=mLines.map((l,i)=>`<tr>
+    <td><input value="${l.item||''}" oninput="mLines[${i}].item=this.value"></td>
+    <td><input value="${l.tekiyo||''}" oninput="mLines[${i}].tekiyo=this.value"></td>
+    <td><input value="${l.qty||''}" style="text-align:right" oninput="mLines[${i}].qty=this.value;calcMLine(${i})"></td>
+    <td><input value="${l.tani||''}" oninput="mLines[${i}].tani=this.value"></td>
+    <td><input value="${l.tanka||''}" style="text-align:right" oninput="mLines[${i}].tanka=this.value;calcMLine(${i})"></td>
+    <td><input value="${fmt(l.kin||0)}" id="mkin-${i}" style="text-align:right;font-weight:bold" oninput="mLines[${i}].kin=unFmt(this.value);calcMTotal()"></td>
+    <td><button class="del-btn" onclick="delMLine(${i})">✕</button></td>
+  </tr>`).join('');
+  calcMTotal();
+}
+function calcMLine(i){mLines[i].kin=Math.round((parseFloat(mLines[i].qty)||0)*(parseFloat(mLines[i].tanka)||0));const el=document.getElementById('mkin-'+i);if(el)el.value=fmt(mLines[i].kin);calcMTotal()}
+function calcMTotal(){const sub=mLines.reduce((s,l)=>s+unFmt(l.kin),0);const tax=Math.round(sub*0.1);document.getElementById('m-subtotal').textContent=fmt(sub)+'円';document.getElementById('m-tax').textContent=fmt(tax)+'円';document.getElementById('m-total').textContent=fmt(sub+tax)+'円'}
+function addMitsumoriLine(){mLines.push({item:'',tekiyo:'',qty:'',tani:'式',tanka:'',kin:''});renderMLines()}
+function delMLine(i){mLines.splice(i,1);renderMLines()}
+function saveMitsumori(){
+  const list=DB.get('mitsumori');
+  const editId=document.getElementById('m-edit-id').value;
+  const sub=mLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const _mExisting=editId?list.find(x=>x.id===editId):null;
+  const data={id:editId||Date.now().toString(),no:document.getElementById('mm-no').value,kojiId:document.getElementById('mm-koji').value,atesaki:document.getElementById('mm-atesaki').value,title:document.getElementById('mm-title').value,date:document.getElementById('mm-date').value,expiry:document.getElementById('mm-expiry').value,author:document.getElementById('mm-author').value,payment:document.getElementById('mm-payment').value,status:document.getElementById('mm-status').value,note:document.getElementById('mm-note').value,lines:mLines,subtotal:sub,total:sub+Math.round(sub*0.1),approvalStatus:_mExisting?(_mExisting.approvalStatus||'未提出'):'未提出',approvalApprover:_mExisting?(_mExisting.approvalApprover||''):'',approvalDate:_mExisting?(_mExisting.approvalDate||''):'',approvalComment:_mExisting?(_mExisting.approvalComment||''):''};
+  if(editId){const idx=list.findIndex(x=>x.id===editId);if(idx>=0)list[idx]=data}else list.push(data);
+  DB.set('mitsumori',list);closeModal('modal-mitsumori');renderMitsumoriList();
+}
+function renderMitsumoriList(){
+  const filter=document.getElementById('mitsumori-koji-filter').value;
+  const list=DB.get('mitsumori').filter(x=>!filter||x.kojiId===filter);
+  const koji=DB.get('koji');
+  const tbody=document.getElementById('mitsumori-tbody');
+  if(list.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#999;padding:20px">見積書がありません</td></tr>';return}
+  tbody.innerHTML=list.map(x=>{const k=koji.find(k=>k.id===x.kojiId);const apvSt=x.approvalStatus||'未提出';return`<tr><td>${x.no}</td><td>${k?k.name:''}</td><td>${x.atesaki||''}</td><td>${x.title||''}</td><td class="num">${fmt(x.total)}円</td><td>${x.date||''}</td><td>${x.expiry||''}</td><td>${statusBadge(x.status)}</td><td><span class="apv-chip apv-${apvSt}" onclick="openApprovalModal('${x.kojiId}','mitsumori','${x.id}')" title="承認ステータスを変更">${APV_EMOJI[apvSt]||'📝'} ${apvSt}</span>${x.approvalApprover?`<div style="font-size:10px;color:#888;margin-top:2px">承認者：${escHtml(x.approvalApprover)}</div>`:''}</td><td style="white-space:nowrap"><button class="btn btn-light btn-sm" onclick="openMitsumoriModal('${x.id}')">編集</button><button class="btn btn-danger btn-sm" onclick="delDoc('mitsumori','${x.id}',renderMitsumoriList)">削除</button></td></tr>`}).join('');
+}
+function printMitsumori(){
+  const sub=mLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const html=buildPrintDoc('見積書',{no:document.getElementById('mm-no').value,name:document.getElementById('mm-title').value,client:document.getElementById('mm-atesaki').value},
+    `<p style="margin-bottom:12px">件名：<strong>${document.getElementById('mm-title').value}</strong>　見積日：${document.getElementById('mm-date').value}　有効期限：${document.getElementById('mm-expiry').value||''}</p>
+    <table style="width:100%;border-collapse:collapse">
+      <tr style="background:#1a5276;color:#fff"><th style="padding:8px;border:1px solid #999">工種・品目</th><th style="padding:8px;border:1px solid #999">摘要</th><th style="padding:8px;border:1px solid #999">数量</th><th style="padding:8px;border:1px solid #999">単位</th><th style="padding:8px;border:1px solid #999">単価</th><th style="padding:8px;border:1px solid #999">金額</th></tr>
+      ${mLines.map(l=>`<tr><td style="padding:7px;border:1px solid #ddd">${l.item||''}</td><td style="padding:7px;border:1px solid #ddd">${l.tekiyo||''}</td><td style="padding:7px;border:1px solid #ddd;text-align:right">${l.qty||''}</td><td style="padding:7px;border:1px solid #ddd;text-align:center">${l.tani||''}</td><td style="padding:7px;border:1px solid #ddd;text-align:right">${fmt(l.tanka)}</td><td style="padding:7px;border:1px solid #ddd;text-align:right;font-weight:bold">${fmt(l.kin)}</td></tr>`).join('')}
+      <tr><td colspan="5" style="padding:8px;border:1px solid #ddd;text-align:right">小計</td><td style="padding:8px;border:1px solid #ddd;text-align:right">${fmt(sub)}円</td></tr>
+      <tr><td colspan="5" style="padding:8px;border:1px solid #ddd;text-align:right">消費税(10%)</td><td style="padding:8px;border:1px solid #ddd;text-align:right">${fmt(Math.round(sub*0.1))}円</td></tr>
+      <tr style="background:#f0f8e8;font-weight:bold"><td colspan="5" style="padding:8px;border:1px solid #999;text-align:right;font-size:16px">合計金額</td><td style="padding:8px;border:1px solid #999;text-align:right;font-size:16px">${fmt(sub+Math.round(sub*0.1))}円</td></tr>
+    </table>
+    <p style="margin-top:12px">お支払条件：${document.getElementById('mm-payment').value||''}</p>`
+  );
+  openPrint(html);
+}
+</script>
+<script>
+// ===== 共通印刷ヘルパー =====
+function buildPrintDoc(type,koji,body){
+  var wp='<script>window.onload=function(){window.print()}<\/script>';
+  return'<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>'+type+'</title><style>body{font-family:Meiryo,sans-serif;padding:20px;max-width:820px;margin:0 auto;font-size:13px}h2{color:#1a5276;border-bottom:2px solid #2980b9;padding-bottom:6px}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;font-size:12px}.info-row{display:flex;gap:6px}.info-label{color:#888;white-space:nowrap}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}th{background:#1a5276;color:#fff;padding:7px 10px;text-align:left}td{padding:7px 10px;border-bottom:1px solid #ddd}.total-row{background:#f0f8e8;font-weight:bold}@media print{body{padding:0}}</style></head><body><h2>'+type+'</h2><div class="info-grid"><div class="info-row"><span class="info-label">工事番号：</span><strong>'+(koji.no||'')+'</strong></div><div class="info-row"><span class="info-label">工事名：</span><strong>'+(koji.name||'')+'</strong></div>'+(koji.client?'<div class="info-row"><span class="info-label">発注者：</span>'+koji.client+'</div>':'')+'</div>'+body+wp+'</body></html>';
+}
+function openPrint(html){var w=window.open('','_blank');w.document.write(html);w.document.close()}
+function delDoc(type,id,cb){if(!confirm('削除しますか？'))return;DB.set(type,DB.get(type).filter(function(x){return x.id!==id}));cb()}
+
+// ===== 外注依頼書 =====
+let gLines=[];
+function openGaichuuModal(id){
+  populateKojiSelects();
+  const edit=id?DB.get('gaichuu').find(x=>x.id===id):null;
+  document.getElementById('g-edit-id').value=id||'';
+  if(edit){
+    document.getElementById('gm-no').value=edit.no||'';
+    document.getElementById('gm-gyosha').value=edit.gyosha||'';
+    document.getElementById('gm-koushu').value=edit.koushu||'';
+    document.getElementById('gm-date').value=edit.date||'';
+    document.getElementById('gm-start').value=edit.start||'';
+    document.getElementById('gm-end').value=edit.end||'';
+    document.getElementById('gm-place').value=edit.place||'';
+    document.getElementById('gm-tanto').value=edit.tanto||'';
+    document.getElementById('gm-note').value=edit.note||'';
+    document.getElementById('gm-koji').value=edit.kojiId||'';
+    document.getElementById('gm-status').value=edit.status||'依頼中';
+    gLines=edit.lines||[];
+  } else {
+    document.getElementById('gm-no').value=nextNo('gaichuu','G');
+    ['gm-gyosha','gm-koushu','gm-place','gm-tanto','gm-note'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('gm-date').value=today();
+    document.getElementById('gm-start').value='';document.getElementById('gm-end').value='';
+    document.getElementById('gm-status').value='依頼中';document.getElementById('gm-koji').value='';
+    gLines=[{item:'',tekiyo:'',qty:'',tani:'式',tanka:'',kin:''}];
+  }
+  renderGLines();
+  document.getElementById('modal-gaichuu').classList.add('open');
+}
+function renderGLines(){
+  document.getElementById('g-lines').innerHTML=gLines.map((l,i)=>`<tr>
+    <td><input value="${escHtml(l.item||'')}" oninput="gLines[${i}].item=this.value"></td>
+    <td><input value="${escHtml(l.tekiyo||'')}" oninput="gLines[${i}].tekiyo=this.value"></td>
+    <td><input value="${l.qty||''}" style="text-align:right" oninput="gLines[${i}].qty=this.value;calcGLine(${i})"></td>
+    <td><input value="${escHtml(l.tani||'')}" oninput="gLines[${i}].tani=this.value"></td>
+    <td><input value="${l.tanka||''}" style="text-align:right" oninput="gLines[${i}].tanka=this.value;calcGLine(${i})"></td>
+    <td><input value="${fmt(l.kin||0)}" id="gkin-${i}" style="text-align:right;font-weight:bold" oninput="gLines[${i}].kin=unFmt(this.value);calcGTotal()"></td>
+    <td><button class="del-btn" onclick="delGLine(${i})">✕</button></td>
+  </tr>`).join('');
+  calcGTotal();
+}
+function calcGLine(i){gLines[i].kin=Math.round((parseFloat(gLines[i].qty)||0)*(parseFloat(gLines[i].tanka)||0));const el=document.getElementById('gkin-'+i);if(el)el.value=fmt(gLines[i].kin);calcGTotal()}
+function calcGTotal(){document.getElementById('g-total').textContent=fmt(gLines.reduce((s,l)=>s+unFmt(l.kin),0))+'円'}
+function addGaichuuLine(){gLines.push({item:'',tekiyo:'',qty:'',tani:'式',tanka:'',kin:''});renderGLines()}
+function delGLine(i){gLines.splice(i,1);renderGLines()}
+function saveGaichuu(){
+  const list=DB.get('gaichuu');const editId=document.getElementById('g-edit-id').value;
+  const total=gLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const _gExisting=editId?list.find(x=>x.id===editId):null;
+  const data={id:editId||Date.now().toString(),no:document.getElementById('gm-no').value,kojiId:document.getElementById('gm-koji').value,gyosha:document.getElementById('gm-gyosha').value,koushu:document.getElementById('gm-koushu').value,date:document.getElementById('gm-date').value,start:document.getElementById('gm-start').value,end:document.getElementById('gm-end').value,place:document.getElementById('gm-place').value,tanto:document.getElementById('gm-tanto').value,note:document.getElementById('gm-note').value,status:document.getElementById('gm-status').value,lines:gLines,total,approvalStatus:_gExisting?(_gExisting.approvalStatus||'未提出'):'未提出',approvalApprover:_gExisting?(_gExisting.approvalApprover||''):'',approvalDate:_gExisting?(_gExisting.approvalDate||''):'',approvalComment:_gExisting?(_gExisting.approvalComment||''):''};
+  if(editId){const idx=list.findIndex(x=>x.id===editId);if(idx>=0)list[idx]=data}else list.push(data);
+  DB.set('gaichuu',list);closeModal('modal-gaichuu');renderGaichuuList();
+}
+function renderGaichuuList(){
+  const filter=document.getElementById('gaichuu-koji-filter').value;
+  const list=DB.get('gaichuu').filter(x=>!filter||x.kojiId===filter);
+  const koji=DB.get('koji');
+  const tbody=document.getElementById('gaichuu-tbody');
+  if(list.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#999;padding:20px">外注依頼書がありません</td></tr>';return}
+  tbody.innerHTML=list.map(x=>{const k=koji.find(k=>k.id===x.kojiId);const apvSt=x.approvalStatus||'未提出';return`<tr><td>${x.no}</td><td>${k?k.name:''}</td><td>${x.gyosha||''}</td><td>${x.koushu||''}</td><td class="num">${fmt(x.total)}円</td><td>${x.date||''}</td><td style="font-size:12px">${x.start||''}〜${x.end||''}</td><td>${statusBadge(x.status)}</td><td><span class="apv-chip apv-${apvSt}" onclick="openApprovalModal('${x.kojiId}','gaichuu','${x.id}')" title="承認ステータスを変更">${APV_EMOJI[apvSt]||'📝'} ${apvSt}</span>${x.approvalApprover?`<div style="font-size:10px;color:#888;margin-top:2px">承認者：${escHtml(x.approvalApprover)}</div>`:''}</td><td style="white-space:nowrap"><button class="btn btn-light btn-sm" onclick="openGaichuuModal('${x.id}')">編集</button> <button class="btn btn-danger btn-sm" onclick="delDoc('gaichuu','${x.id}',renderGaichuuList)">削除</button></td></tr>`}).join('');
+}
+function printGaichuu(){
+  const koji=DB.get('koji').find(k=>k.id===document.getElementById('gm-koji').value)||{no:'',name:'',client:''};
+  const total=gLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const rows=gLines.map(l=>'<tr><td style="padding:7px;border:1px solid #ddd">'+escHtml(l.item||'')+'</td><td style="padding:7px;border:1px solid #ddd">'+escHtml(l.tekiyo||'')+'</td><td style="padding:7px;border:1px solid #ddd;text-align:right">'+(l.qty||'')+'</td><td style="padding:7px;border:1px solid #ddd;text-align:center">'+escHtml(l.tani||'')+'</td><td style="padding:7px;border:1px solid #ddd;text-align:right">'+fmt(l.tanka||0)+'</td><td style="padding:7px;border:1px solid #ddd;text-align:right;font-weight:bold">'+fmt(l.kin||0)+'</td></tr>').join('');
+  const html=buildPrintDoc('外注依頼書',koji,'<p style="margin-bottom:10px">外注業者：<strong>'+document.getElementById('gm-gyosha').value+'</strong>　工種：'+document.getElementById('gm-koushu').value+'　依頼日：'+document.getElementById('gm-date').value+'</p><table style="width:100%;border-collapse:collapse"><tr style="background:#1a5276;color:#fff"><th style="padding:8px;border:1px solid #999">作業内容</th><th style="padding:8px;border:1px solid #999">摘要</th><th style="padding:8px;border:1px solid #999">数量</th><th style="padding:8px;border:1px solid #999">単位</th><th style="padding:8px;border:1px solid #999">単価</th><th style="padding:8px;border:1px solid #999">金額</th></tr>'+rows+'<tr style="background:#f0f8e8;font-weight:bold"><td colspan="5" style="padding:8px;border:1px solid #999;text-align:right">依頼金額合計（税抜）</td><td style="padding:8px;border:1px solid #999;text-align:right">'+fmt(total)+'円</td></tr></table>');
+  openPrint(html);
+}
+
+// ===== 注文書 =====
+let cLines=[];
+let chumonChanges=[];
+
+// 変更履歴の描画
+function renderChumonChanges(){
+  const tbody=document.getElementById('chumon-changes-tbody');
+  if(!tbody) return;
+  if(chumonChanges.length===0){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#aaa;padding:8px;font-size:12px">変更なし</td></tr>';
+    updateChumonAmountDisplay();
+    return;
+  }
+  const sub=cLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const origTax=sub+Math.round(sub*0.1);
+  tbody.innerHTML=chumonChanges.map((c,i)=>{
+    // 直前の金額変更を探す
+    let prevAmt=origTax;
+    for(let j=i-1;j>=0;j--){if(chumonChanges[j].type==='amount'){prevAmt=chumonChanges[j].newAmount||0;break}}
+    if(c.type==='amount'){
+      const cur=c.newAmount||0;
+      const diff=cur-prevAmt;
+      const diffOrig=cur-origTax;
+      return`<tr style="background:#fdf5ff">
+        <td style="text-align:center;font-weight:bold;color:#6a1b9a;white-space:nowrap">第${i+1}回</td>
+        <td style="text-align:center"><span class="badge" style="background:#e8d5ff;color:#6a1b9a;white-space:nowrap">金額変更</span></td>
+        <td><input type="date" value="${c.date||''}" style="width:100%;border:none;background:transparent;font-size:12px" oninput="chumonChanges[${i}].date=this.value"></td>
+        <td>
+          <input value="${fmt(cur)}" style="text-align:right;width:100%;border:none;background:transparent;font-size:13px;font-weight:bold;color:#1a5276"
+            oninput="chumonChanges[${i}].newAmount=unFmt(this.value);refreshChumonChangeDiff(${i})"
+            onblur="this.value=fmt(chumonChanges[${i}].newAmount||0);renderChumonChanges()">
+          <div style="font-size:10px;color:#888;margin-top:1px;padding-left:4px">円（税込）</div>
+        </td>
+        <td id="cc-cdiff-${i}" style="padding:4px 8px;vertical-align:middle">
+          <div style="white-space:nowrap">
+            <span style="color:${diff>=0?'var(--success)':'var(--danger)'};font-weight:bold;font-size:13px">${(diff>=0?'+':'')+fmt(diff)}円</span>
+            <div style="font-size:10px;color:${diffOrig>=0?'var(--success)':'var(--danger)'}">当初比 ${(diffOrig>=0?'+':'')+fmt(diffOrig)}円</div>
+            <div style="font-size:10px;color:#888">変更前：${fmt(prevAmt)}円</div>
+          </div>
+        </td>
+        <td><input value="${escHtml(c.reason||'')}" style="width:100%;border:none;background:transparent;font-size:13px" oninput="chumonChanges[${i}].reason=this.value" placeholder="変更理由"></td>
+        <td><button class="del-btn" onclick="chumonChanges.splice(${i},1);renderChumonChanges()">✕</button></td>
+      </tr>`;
+    } else {
+      return`<tr style="background:#f0fff8">
+        <td style="text-align:center;font-weight:bold;color:#1b6a3a;white-space:nowrap">第${i+1}回</td>
+        <td style="text-align:center"><span class="badge" style="background:#d5ffe8;color:#1b6a3a;white-space:nowrap">工期変更</span></td>
+        <td><input type="date" value="${c.date||''}" style="width:100%;border:none;background:transparent;font-size:12px" oninput="chumonChanges[${i}].date=this.value"></td>
+        <td style="padding:4px 8px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#555">
+              <span style="white-space:nowrap;min-width:42px">開始</span>
+              <input type="date" value="${c.newStart||''}" style="border:1px solid #b0d8c0;border-radius:4px;padding:3px 6px;font-size:12px;background:#fff;color:#1b6a3a;width:100%" oninput="chumonChanges[${i}].newStart=this.value">
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#555">
+              <span style="white-space:nowrap;min-width:42px">終了</span>
+              <input type="date" value="${c.newEnd||''}" style="border:1px solid #b0d8c0;border-radius:4px;padding:3px 6px;font-size:12px;background:#fff;color:#1b6a3a;width:100%" oninput="chumonChanges[${i}].newEnd=this.value">
+            </div>
+          </div>
+        </td>
+        <td style="padding:4px 8px;font-size:11px;color:#888;vertical-align:middle">金額変更なし</td>
+        <td><input value="${escHtml(c.reason||'')}" style="width:100%;border:none;background:transparent;font-size:13px" oninput="chumonChanges[${i}].reason=this.value" placeholder="変更理由"></td>
+        <td><button class="del-btn" onclick="chumonChanges.splice(${i},1);renderChumonChanges()">✕</button></td>
+      </tr>`;
+    }
+  }).join('');
+  updateChumonAmountDisplay();
+}
+
+// 変更追加
+function addChumonChange(type){
+  const sub=cLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const origTax=sub+Math.round(sub*0.1);
+  if(type==='amount'){
+    let prevAmt=origTax;
+    for(let j=chumonChanges.length-1;j>=0;j--){if(chumonChanges[j].type==='amount'){prevAmt=chumonChanges[j].newAmount||0;break}}
+    chumonChanges.push({type:'amount',date:today(),newAmount:prevAmt,reason:''});
+  } else {
+    chumonChanges.push({type:'period',date:today(),newStart:'',newEnd:'',reason:''});
+  }
+  renderChumonChanges();
+}
+
+// 金額変更時に差異セルのみ更新（リアルタイム）
+function refreshChumonChangeDiff(idx){
+  const sub=cLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const origTax=sub+Math.round(sub*0.1);
+  for(let i=idx;i<chumonChanges.length;i++){
+    if(chumonChanges[i].type!=='amount') continue;
+    const el=document.getElementById('cc-cdiff-'+i);
+    if(!el) continue;
+    let prevAmt=origTax;
+    for(let j=i-1;j>=0;j--){if(chumonChanges[j].type==='amount'){prevAmt=chumonChanges[j].newAmount||0;break}}
+    const cur=chumonChanges[i].newAmount||0;
+    const diff=cur-prevAmt;
+    const diffOrig=cur-origTax;
+    el.innerHTML=`<div style="white-space:nowrap"><span style="color:${diff>=0?'var(--success)':'var(--danger)'};font-weight:bold;font-size:13px">${(diff>=0?'+':'')+fmt(diff)}円</span><div style="font-size:10px;color:${diffOrig>=0?'var(--success)':'var(--danger)'}">当初比 ${(diffOrig>=0?'+':'')+fmt(diffOrig)}円</div><div style="font-size:10px;color:#888">変更前：${fmt(prevAmt)}円</div></div>`;
+  }
+  updateChumonAmountDisplay();
+}
+
+// 注文金額 大表示の更新
+function updateChumonAmountDisplay(){
+  const sub=cLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const origTax=sub+Math.round(sub*0.1);
+  let curAmt=origTax;
+  for(let j=chumonChanges.length-1;j>=0;j--){if(chumonChanges[j].type==='amount'){curAmt=chumonChanges[j].newAmount||0;break}}
+  const diff=curAmt-origTax;
+  const origEl=document.getElementById('cm-orig-amount-disp');
+  const curEl=document.getElementById('cm-cur-amount-disp');
+  const diffEl=document.getElementById('cm-diff-disp');
+  const latestEl=document.getElementById('cm-latest-amount');
+  if(origEl) origEl.textContent=fmt(origTax)+'円';
+  if(curEl) curEl.textContent=fmt(curAmt)+'円';
+  if(diffEl){
+    const hasAmountChange=chumonChanges.some(c=>c.type==='amount');
+    diffEl.textContent=hasAmountChange?(diff>=0?'+':'')+fmt(diff)+'円':'（変更なし）';
+    diffEl.style.color=diff>0?'var(--success)':diff<0?'var(--danger)':'#888';
+  }
+  if(latestEl){
+    const aCnt=chumonChanges.filter(c=>c.type==='amount').length;
+    latestEl.textContent=fmt(curAmt)+'円（税込）'+(aCnt>0?' ／ 第'+aCnt+'回変更後':'');
+    latestEl.style.color=aCnt>0?'var(--primary)':'#555';
+  }
+  // 工期変更インジケーター
+  const periodChgEl=document.getElementById('cm-period-chg-disp');
+  const periodChgDetail=document.getElementById('cm-period-chg-detail');
+  if(periodChgEl&&periodChgDetail){
+    const pChanges=chumonChanges.filter(c=>c.type==='period');
+    if(pChanges.length>0){
+      const last=pChanges[pChanges.length-1];
+      const s=last.newStart||'';const e=last.newEnd||'';
+      periodChgDetail.innerHTML=(s?'開始：'+s+'<br>':'')+(e?'終了：'+e:'未定')+(pChanges.length>1?'<br><span style="font-size:10px;color:#888">（第'+pChanges.length+'回変更後）</span>':'');
+      periodChgEl.style.display='block';
+    } else {
+      periodChgEl.style.display='none';
+    }
+  }
+}
+
+function openChumonModal(id){
+  populateKojiSelects();
+  const edit=id?DB.get('chumon').find(x=>x.id===id):null;
+  document.getElementById('c-modal-title').textContent=edit?'注文書編集':'注文書作成';
+  document.getElementById('c-edit-id').value=id||'';
+  if(edit){
+    document.getElementById('cm-no').value=edit.no;
+    document.getElementById('cm-koji').value=edit.kojiId||'';
+    document.getElementById('cm-atesaki').value=edit.atesaki||'';
+    document.getElementById('cm-title').value=edit.title||'';
+    document.getElementById('cm-date').value=edit.date||'';
+    document.getElementById('cm-place').value=edit.place||'';
+    document.getElementById('cm-period-start').value=edit.periodStart||'';
+    document.getElementById('cm-period-end').value=edit.periodEnd||'';
+    document.getElementById('cm-payment').value=edit.payment||'';
+    document.getElementById('cm-tanto').value=edit.tanto||'';
+    document.getElementById('cm-status').value=edit.status||'発注前';
+    document.getElementById('cm-note').value=edit.note||'';
+    cLines=JSON.parse(JSON.stringify(edit.lines||[]));
+    chumonChanges=JSON.parse(JSON.stringify(edit.changes||[]));
+  } else {
+    document.getElementById('cm-no').value=nextNo('chumon','C');
+    ['cm-atesaki','cm-title','cm-place','cm-period-start','cm-period-end','cm-payment','cm-tanto','cm-note'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('cm-date').value=today();
+    document.getElementById('cm-status').value='発注前';
+    document.getElementById('cm-koji').value='';
+    cLines=[{item:'',tekiyo:'',qty:'',tani:'式',tanka:'',kin:''}];
+    chumonChanges=[];
+  }
+  renderCLines();
+  renderChumonChanges();
+  updateChumonAmountDisplay();
+  document.getElementById('modal-chumon').classList.add('open');
+}
+
+function renderCLines(){
+  document.getElementById('c-lines').innerHTML=cLines.map((l,i)=>`<tr>
+    <td><input value="${escHtml(l.item||'')}" oninput="cLines[${i}].item=this.value"></td>
+    <td><input value="${escHtml(l.tekiyo||'')}" oninput="cLines[${i}].tekiyo=this.value"></td>
+    <td><input value="${l.qty||''}" style="text-align:right" oninput="cLines[${i}].qty=this.value;calcCLine(${i})"></td>
+    <td><input value="${l.tani||''}" oninput="cLines[${i}].tani=this.value"></td>
+    <td><input value="${fmt(l.tanka||0)}" style="text-align:right" onfocus="this.value=this.value.replace(/,/g,'')" oninput="cLines[${i}].tanka=unFmt(this.value);calcCLine(${i})"></td>
+    <td><input value="${fmt(l.kin||0)}" id="ckin-${i}" style="text-align:right;font-weight:bold" oninput="cLines[${i}].kin=unFmt(this.value);calcCTotal()"></td>
+    <td><button class="del-btn" onclick="delCLine(${i})">✕</button></td>
+  </tr>`).join('');
+  calcCTotal();
+}
+
+function calcCLine(i){
+  cLines[i].kin=Math.round((parseFloat(cLines[i].qty)||0)*(unFmt(cLines[i].tanka)||0));
+  const el=document.getElementById('ckin-'+i);
+  if(el) el.value=fmt(cLines[i].kin);
+  calcCTotal();
+}
+
+function calcCTotal(){
+  const sub=cLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const tax=Math.round(sub*0.1);
+  const total=sub+tax;
+  const subEl=document.getElementById('c-subtotal');
+  const taxEl=document.getElementById('c-tax');
+  const totEl=document.getElementById('c-total');
+  if(subEl) subEl.textContent=fmt(sub)+'円';
+  if(taxEl) taxEl.textContent=fmt(tax)+'円';
+  if(totEl) totEl.textContent=fmt(total)+'円';
+  updateChumonAmountDisplay();
+}
+
+function addChumonLine(){cLines.push({item:'',tekiyo:'',qty:'',tani:'式',tanka:'',kin:''});renderCLines()}
+function delCLine(i){cLines.splice(i,1);renderCLines()}
+
+function saveChumon(){
+  const list=DB.get('chumon');
+  const editId=document.getElementById('c-edit-id').value;
+  const sub=cLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const origTax=sub+Math.round(sub*0.1);
+  let curAmt=origTax;
+  for(let j=chumonChanges.length-1;j>=0;j--){if(chumonChanges[j].type==='amount'){curAmt=chumonChanges[j].newAmount||0;break}}
+  const data={
+    id:editId||genId(),
+    no:document.getElementById('cm-no').value,
+    kojiId:document.getElementById('cm-koji').value,
+    atesaki:document.getElementById('cm-atesaki').value,
+    title:document.getElementById('cm-title').value,
+    date:document.getElementById('cm-date').value,
+    place:document.getElementById('cm-place').value,
+    periodStart:document.getElementById('cm-period-start').value,
+    periodEnd:document.getElementById('cm-period-end').value,
+    payment:document.getElementById('cm-payment').value,
+    tanto:document.getElementById('cm-tanto').value,
+    status:document.getElementById('cm-status').value,
+    note:document.getElementById('cm-note').value,
+    lines:JSON.parse(JSON.stringify(cLines)),
+    changes:JSON.parse(JSON.stringify(chumonChanges)),
+    origTax:origTax,
+    currentAmount:curAmt
+  };
+  const _cExisting=editId?list.find(x=>x.id===editId):null;
+  data.approvalStatus=_cExisting?(_cExisting.approvalStatus||'未提出'):'未提出';
+  data.approvalApprover=_cExisting?(_cExisting.approvalApprover||''):'';
+  data.approvalDate=_cExisting?(_cExisting.approvalDate||''):'';
+  data.approvalComment=_cExisting?(_cExisting.approvalComment||''):'';
+  if(editId){const idx=list.findIndex(x=>x.id===editId);if(idx>=0)list[idx]=data}else list.push(data);
+  DB.set('chumon',list);
+  closeModal('modal-chumon');
+  renderChumonList();
+}
+
+function renderChumonList(){
+  const filter=document.getElementById('chumon-koji-filter').value;
+  const list=DB.get('chumon').filter(x=>!filter||x.kojiId===filter);
+  const koji=DB.get('koji');
+  const tbody=document.getElementById('chumon-tbody');
+  if(list.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#999;padding:20px">注文書がありません</td></tr>';return}
+  tbody.innerHTML=list.map(x=>{
+    const k=koji.find(k=>k.id===x.kojiId);
+    const chgCnt=(x.changes||[]).length;
+    const apvSt=x.approvalStatus||'未提出';
+    return`<tr>
+      <td>${escHtml(x.no)}</td>
+      <td>${k?escHtml(k.name):''}</td>
+      <td>${escHtml(x.atesaki||'')}</td>
+      <td>${escHtml(x.title||'')}</td>
+      <td class="num">${fmt(x.currentAmount||x.origTax||0)}円</td>
+      <td>${x.date||''}</td>
+      <td>${chgCnt>0?'<span class="badge badge-yellow">'+chgCnt+'回</span>':'－'}</td>
+      <td>${statusBadge(x.status)}</td>
+      <td><span class="apv-chip apv-${apvSt}" onclick="openApprovalModal('${x.kojiId}','chumon','${x.id}')" title="承認ステータスを変更">${APV_EMOJI[apvSt]||'📝'} ${apvSt}</span>${x.approvalApprover?`<div style="font-size:10px;color:#888;margin-top:2px">承認者：${escHtml(x.approvalApprover)}</div>`:''}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-light btn-sm" onclick="openChumonModal('${x.id}')">編集</button>
+        <button class="btn btn-danger btn-sm" onclick="delDoc('chumon','${x.id}',renderChumonList)">削除</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function printChumon(){
+  const kid=document.getElementById('cm-koji').value;
+  const koji=kid?DB.get('koji').find(k=>k.id===kid):null;
+  const sub=cLines.reduce((s,l)=>s+unFmt(l.kin),0);
+  const tax=Math.round(sub*0.1);
+  const total=sub+tax;
+  let curAmt=total;
+  for(let j=chumonChanges.length-1;j>=0;j--){if(chumonChanges[j].type==='amount'){curAmt=chumonChanges[j].newAmount||0;break}}
+  const atesaki=document.getElementById('cm-atesaki').value;
+  const docKoji={no:document.getElementById('cm-no').value,name:document.getElementById('cm-title').value,client:atesaki};
+  const html=buildPrintDoc('注文書',docKoji,
+    `<p style="margin-bottom:8px">注文先：<strong>${escHtml(atesaki)}</strong>　注文日：${document.getElementById('cm-date').value}</p>
+    ${document.getElementById('cm-place').value?'<p style="margin-bottom:6px">工事場所：'+escHtml(document.getElementById('cm-place').value)+'</p>':''}
+    <table style="width:100%;border-collapse:collapse;margin:10px 0">
+      <tr style="background:#1a5276;color:#fff">
+        <th style="padding:8px;border:1px solid #999">品名・材料名</th><th style="padding:8px;border:1px solid #999">規格・摘要</th>
+        <th style="padding:8px;border:1px solid #999">数量</th><th style="padding:8px;border:1px solid #999">単位</th>
+        <th style="padding:8px;border:1px solid #999">単価</th><th style="padding:8px;border:1px solid #999">金額</th>
+      </tr>
+      ${cLines.map(l=>`<tr>
+        <td style="padding:7px;border:1px solid #ddd">${escHtml(l.item||'')}</td>
+        <td style="padding:7px;border:1px solid #ddd">${escHtml(l.tekiyo||'')}</td>
+        <td style="padding:7px;border:1px solid #ddd;text-align:right">${l.qty||''}</td>
+        <td style="padding:7px;border:1px solid #ddd;text-align:center">${escHtml(l.tani||'')}</td>
+        <td style="padding:7px;border:1px solid #ddd;text-align:right">${fmt(unFmt(l.tanka))}</td>
+        <td style="padding:7px;border:1px solid #ddd;text-align:right;font-weight:bold">${fmt(unFmt(l.kin))}</td>
+      </tr>`).join('')}
+      <tr><td colspan="5" style="padding:8px;border:1px solid #ddd;text-align:right">小計</td><td style="padding:8px;border:1px solid #ddd;text-align:right">${fmt(sub)}円</td></tr>
+      <tr><td colspan="5" style="padding:8px;border:1px solid #ddd;text-align:right">消費税(10%)</td><td style="padding:8px;border:1px solid #ddd;text-align:right">${fmt(tax)}円</td></tr>
+      <tr style="background:#f0f8e8;font-weight:bold">
+        <td colspan="5" style="padding:8px;border:1px solid #999;text-align:right;font-size:15px">当初合計金額</td>
+        <td style="padding:8px;border:1px solid #999;text-align:right;font-size:15px">${fmt(total)}円</td>
+      </tr>
+      ${curAmt!==total?`<tr style="background:#fff8e1;font-weight:bold">
+        <td colspan="5" style="padding:8px;border:1px solid #999;text-align:right;font-size:15px">現在の注文金額（変更後）</td>
+        <td style="padding:8px;border:1px solid #999;text-align:right;font-size:15px;color:#1a5276">${fmt(curAmt)}円</td>
+      </tr>`:''}
+    </table>
+    ${document.getElementById('cm-payment').value?'<p style="margin-top:8px">支払条件：'+escHtml(document.getElementById('cm-payment').value)+'</p>':''}
+    ${document.getElementById('cm-note').value?'<p style="margin-top:8px">備考：'+escHtml(document.getElementById('cm-note').value)+'</p>':''}
+    <div style="margin-top:28px;border:1px solid #ccc;padding:14px 20px">
+      <p style="font-size:15px;font-weight:bold;text-align:center;margin-bottom:10px">注文請書</p>
+      <p style="text-align:center">上記の通り、注文を承りました。</p>
+      <div style="margin-top:20px;text-align:right">
+        <p>会社名：___________________</p>
+        <p style="margin-top:6px">代表者名：___________________　㊞</p>
+      </div>
+    </div>`
+  );
+  openPrint(html);
+}
+
+// ===== 原価管理 =====
+let genkaLines=[];
+function loadGenka(){
+  const kid=document.getElementById('genka-koji-sel').value;
+  const cont=document.getElementById('genka-content');
+  if(!kid){cont.style.display='none';return}
+  const koji=DB.get('koji').find(k=>k.id===kid);
+  if(!koji) return;
+  const ukeoi=getLatestPrice(koji);
+  const yosanTotal=getYosanLines(kid).reduce((s,l)=>s+(l.kin||0),0);
+  document.getElementById('gc-ukeoi').textContent=fmt(ukeoi)+'円';
+  document.getElementById('gc-yosan').textContent=fmt(yosanTotal)+'円';
+  genkaLines=JSON.parse(localStorage.getItem('genka_'+kid)||'[]');
+  renderGenkaLines();
+  cont.style.display='block';
+}
+
+function calcGenkaStats(){
+  const kid=document.getElementById('genka-koji-sel').value;
+  const koji=kid?DB.get('koji').find(k=>k.id===kid):null;
+  if(!koji) return;
+  const ukeoi=getLatestPrice(koji);
+  const yosanTotal=getYosanLines(kid).reduce((s,l)=>s+(l.kin||0),0);
+  const jisseki=genkaLines.reduce((s,l)=>s+(unFmt(l.jisseki)||0),0);
+  const nokori=yosanTotal-jisseki;
+  const rieki=ukeoi-jisseki;
+  document.getElementById('gc-jisseki').textContent=fmt(jisseki)+'円';
+  const nokoriEl=document.getElementById('gc-nokori');
+  nokoriEl.textContent=fmt(nokori)+'円';
+  nokoriEl.style.color=nokori<0?'var(--danger)':'var(--primary)';
+  const riekiEl=document.getElementById('gc-rieki');
+  riekiEl.textContent=fmt(rieki)+'円';
+  riekiEl.style.color=rieki<0?'var(--danger)':'var(--success)';
+}
+
+function renderGenkaLines(){
+  document.getElementById('genka-lines').innerHTML=genkaLines.map((l,i)=>{
+    const yosan=unFmt(l.yosan)||0;
+    const jisseki=unFmt(l.jisseki)||0;
+    const diff=yosan-jisseki;
+    const rate=yosan>0?Math.round(jisseki/yosan*100):0;
+    return`<tr>
+      <td><input value="${escHtml(l.himoku||'')}" oninput="genkaLines[${i}].himoku=this.value"></td>
+      <td><input value="${escHtml(l.tekiyo||'')}" oninput="genkaLines[${i}].tekiyo=this.value"></td>
+      <td><input value="${escHtml(l.gyosha||'')}" oninput="genkaLines[${i}].gyosha=this.value"></td>
+      <td><input value="${fmt(yosan)}" style="text-align:right" onfocus="this.value=this.value.replace(/,/g,'')" oninput="genkaLines[${i}].yosan=unFmt(this.value)" onblur="this.value=fmt(unFmt(this.value));calcGenkaStats()"></td>
+      <td><input value="${fmt(jisseki)}" style="text-align:right" onfocus="this.value=this.value.replace(/,/g,'')" oninput="genkaLines[${i}].jisseki=unFmt(this.value)" onblur="this.value=fmt(unFmt(this.value));renderGenkaLines()"></td>
+      <td style="text-align:right;padding:5px 8px;color:${diff>=0?'var(--success)':'var(--danger)'};font-weight:bold">${fmt(diff)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="progress-bar" style="flex:1"><div class="progress-fill${rate>100?' danger':rate>80?' warn':''}" style="width:${Math.min(rate,100)}%"></div></div>
+          <span style="font-size:11px;min-width:30px;text-align:right">${rate}%</span>
+        </div>
+      </td>
+      <td><input value="${escHtml(l.denpyo||'')}" oninput="genkaLines[${i}].denpyo=this.value"></td>
+      <td><input type="date" value="${l.date||''}" oninput="genkaLines[${i}].date=this.value"></td>
+      <td><button class="del-btn" onclick="delGenkaLine(${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+  calcGenkaStats();
+}
+
+function addGenkaLine(){genkaLines.push({himoku:'',tekiyo:'',gyosha:'',yosan:'',jisseki:'',denpyo:'',date:''});renderGenkaLines()}
+function delGenkaLine(i){genkaLines.splice(i,1);renderGenkaLines()}
+
+function saveGenka(){
+  const kid=document.getElementById('genka-koji-sel').value;
+  if(!kid) return;
+  localStorage.setItem('genka_'+kid,JSON.stringify(genkaLines));
+  alert('保存しました');
+}
+
+function printGenka(){
+  const kid=document.getElementById('genka-koji-sel').value;
+  if(!kid){alert('工事を選択してください');return}
+  const koji=DB.get('koji').find(k=>k.id===kid);
+  const ukeoi=getLatestPrice(koji);
+  const yosanTotal=getYosanLines(kid).reduce((s,l)=>s+(l.kin||0),0);
+  const jisseki=genkaLines.reduce((s,l)=>s+(unFmt(l.jisseki)||0),0);
+  const html=buildPrintDoc('原価管理表',koji,
+    `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;text-align:center">
+      <div style="border:1px solid #ccc;padding:8px;border-radius:4px"><div style="font-size:11px;color:#888">請負金額</div><div style="font-weight:bold">${fmt(ukeoi)}円</div></div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:4px"><div style="font-size:11px;color:#888">実行予算</div><div style="font-weight:bold">${fmt(yosanTotal)}円</div></div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:4px"><div style="font-size:11px;color:#888">実績原価</div><div style="font-weight:bold">${fmt(jisseki)}円</div></div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:4px"><div style="font-size:11px;color:#888">粗利益見込</div><div style="font-weight:bold;color:${ukeoi-jisseki>=0?'green':'red'}">${fmt(ukeoi-jisseki)}円</div></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin:10px 0">
+      <tr style="background:#1a5276;color:#fff">
+        <th style="padding:7px;border:1px solid #999">費目</th><th style="padding:7px;border:1px solid #999">摘要</th>
+        <th style="padding:7px;border:1px solid #999">業者・仕入先</th><th style="padding:7px;border:1px solid #999">予算額</th>
+        <th style="padding:7px;border:1px solid #999">実績額</th><th style="padding:7px;border:1px solid #999">差異</th>
+        <th style="padding:7px;border:1px solid #999">進捗%</th><th style="padding:7px;border:1px solid #999">計上日</th>
+      </tr>
+      ${genkaLines.map(l=>{const y=unFmt(l.yosan)||0,j=unFmt(l.jisseki)||0,d=y-j,r=y>0?Math.round(j/y*100):0;return`<tr>
+        <td style="padding:6px;border:1px solid #ddd">${escHtml(l.himoku||'')}</td>
+        <td style="padding:6px;border:1px solid #ddd">${escHtml(l.tekiyo||'')}</td>
+        <td style="padding:6px;border:1px solid #ddd">${escHtml(l.gyosha||'')}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right">${fmt(y)}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right">${fmt(j)}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right;color:${d>=0?'green':'red'}">${fmt(d)}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right">${r}%</td>
+        <td style="padding:6px;border:1px solid #ddd">${l.date||''}</td>
+      </tr>`}).join('')}
+      <tr style="background:#f0f8e8;font-weight:bold">
+        <td colspan="3" style="padding:7px;border:1px solid #999;text-align:right">合計</td>
+        <td style="padding:7px;border:1px solid #999;text-align:right">${fmt(yosanTotal)}</td>
+        <td style="padding:7px;border:1px solid #999;text-align:right">${fmt(jisseki)}</td>
+        <td style="padding:7px;border:1px solid #999;text-align:right;color:${yosanTotal-jisseki>=0?'green':'red'}">${fmt(yosanTotal-jisseki)}</td>
+        <td colspan="2"></td>
+      </tr>
+    </table>`
+  );
+  openPrint(html);
+}
+
+// ===== 精算書 =====
+let seisanLines=[];
+function loadSeisan(){
+  const kid=document.getElementById('seisan-koji-sel').value;
+  const cont=document.getElementById('seisan-content');
+  if(!kid){cont.style.display='none';return}
+  const koji=DB.get('koji').find(k=>k.id===kid);
+  if(!koji) return;
+  document.getElementById('s-no').value=koji.no;
+  document.getElementById('s-name').value=koji.name;
+  const saved=JSON.parse(localStorage.getItem('seisan_'+kid)||'null');
+  if(saved){
+    document.getElementById('s-date').value=saved.date||'';
+    document.getElementById('s-author').value=saved.author||'';
+    document.getElementById('s-note').value=saved.note||'';
+    seisanLines=saved.lines||[];
+  } else {
+    document.getElementById('s-date').value=today();
+    document.getElementById('s-author').value='';
+    document.getElementById('s-note').value='';
+    seisanLines=[];
+  }
+  renderSeisanLines();
+  cont.style.display='block';
+}
+
+function calcSeisanTotals(){
+  const kid=document.getElementById('seisan-koji-sel').value;
+  const koji=kid?DB.get('koji').find(k=>k.id===kid):null;
+  if(!koji) return;
+  const ukeoi=getLatestPrice(koji);
+  const jTotal=seisanLines.reduce((s,l)=>s+(unFmt(l.jisseki)||0),0);
+  const rieki=ukeoi-jTotal;
+  const rate=ukeoi>0?Math.round(rieki/ukeoi*1000)/10:0;
+  document.getElementById('s-ukeoi').textContent=fmt(ukeoi)+'円';
+  document.getElementById('s-genka').textContent=fmt(jTotal)+'円';
+  const riekiEl=document.getElementById('s-rieki');
+  riekiEl.textContent=fmt(rieki)+'円';
+  riekiEl.style.color=rieki>=0?'var(--success)':'var(--danger)';
+  const rateEl=document.getElementById('s-rate');
+  rateEl.textContent=rate+'%';
+  rateEl.style.color=rate>=0?'var(--success)':'var(--danger)';
+}
+
+function renderSeisanLines(){
+  document.getElementById('seisan-lines').innerHTML=seisanLines.map((l,i)=>{
+    const yosan=unFmt(l.yosan)||0;
+    const jisseki=unFmt(l.jisseki)||0;
+    const diff=jisseki-yosan;
+    return`<tr>
+      <td><input value="${escHtml(l.himoku||'')}" oninput="seisanLines[${i}].himoku=this.value"></td>
+      <td><input value="${escHtml(l.tekiyo||'')}" oninput="seisanLines[${i}].tekiyo=this.value"></td>
+      <td><input value="${escHtml(l.gyosha||'')}" oninput="seisanLines[${i}].gyosha=this.value"></td>
+      <td><input value="${fmt(yosan)}" style="text-align:right" onfocus="this.value=this.value.replace(/,/g,'')" oninput="seisanLines[${i}].yosan=unFmt(this.value)" onblur="this.value=fmt(unFmt(this.value));renderSeisanLines()"></td>
+      <td><input value="${fmt(jisseki)}" style="text-align:right" onfocus="this.value=this.value.replace(/,/g,'')" oninput="seisanLines[${i}].jisseki=unFmt(this.value)" onblur="this.value=fmt(unFmt(this.value));renderSeisanLines()"></td>
+      <td style="text-align:right;padding:5px 8px;color:${diff<=0?'var(--success)':'var(--danger)'};font-weight:bold">${fmt(diff)}</td>
+      <td><input value="${escHtml(l.biko||'')}" oninput="seisanLines[${i}].biko=this.value"></td>
+      <td><button class="del-btn" onclick="delSeisanLine(${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+  const yTotal=seisanLines.reduce((s,l)=>s+(unFmt(l.yosan)||0),0);
+  const jTotal=seisanLines.reduce((s,l)=>s+(unFmt(l.jisseki)||0),0);
+  const dTotal=jTotal-yTotal;
+  document.getElementById('s-yosan-total').textContent=fmt(yTotal)+'円';
+  document.getElementById('s-jisseki-total').textContent=fmt(jTotal)+'円';
+  const dtEl=document.getElementById('s-diff-total');
+  dtEl.textContent=fmt(dTotal)+'円';
+  dtEl.style.color=dTotal<=0?'var(--success)':'var(--danger)';
+  calcSeisanTotals();
+}
+
+function addSeisanLine(){seisanLines.push({himoku:'',tekiyo:'',gyosha:'',yosan:'',jisseki:'',biko:''});renderSeisanLines()}
+function delSeisanLine(i){seisanLines.splice(i,1);renderSeisanLines()}
+
+function saveSeisan(){
+  const kid=document.getElementById('seisan-koji-sel').value;
+  if(!kid) return;
+  localStorage.setItem('seisan_'+kid,JSON.stringify({
+    date:document.getElementById('s-date').value,
+    author:document.getElementById('s-author').value,
+    note:document.getElementById('s-note').value,
+    lines:JSON.parse(JSON.stringify(seisanLines))
+  }));
+  alert('保存しました');
+}
+
+function printSeisan(){
+  const kid=document.getElementById('seisan-koji-sel').value;
+  if(!kid){alert('工事を選択してください');return}
+  const koji=DB.get('koji').find(k=>k.id===kid);
+  const ukeoi=getLatestPrice(koji);
+  const yTotal=seisanLines.reduce((s,l)=>s+(unFmt(l.yosan)||0),0);
+  const jTotal=seisanLines.reduce((s,l)=>s+(unFmt(l.jisseki)||0),0);
+  const rieki=ukeoi-jTotal;
+  const rate=ukeoi>0?Math.round(rieki/ukeoi*1000)/10:0;
+  const html=buildPrintDoc('精算書',koji,
+    `<p style="margin-bottom:8px">精算日：${document.getElementById('s-date').value}　作成者：${escHtml(document.getElementById('s-author').value||'')}</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;text-align:center">
+      <div style="border:1px solid #ccc;padding:8px;border-radius:4px"><div style="font-size:11px;color:#888">請負金額（税込）</div><div style="font-weight:bold">${fmt(ukeoi)}円</div></div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:4px"><div style="font-size:11px;color:#888">実際原価合計</div><div style="font-weight:bold">${fmt(jTotal)}円</div></div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:4px"><div style="font-size:11px;color:#888">精算粗利益</div><div style="font-weight:bold;color:${rieki>=0?'green':'red'}">${fmt(rieki)}円</div></div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:4px"><div style="font-size:11px;color:#888">粗利益率</div><div style="font-weight:bold;color:${rate>=0?'green':'red'}">${rate}%</div></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin:10px 0">
+      <tr style="background:#1a5276;color:#fff">
+        <th style="padding:7px;border:1px solid #999">費目</th><th style="padding:7px;border:1px solid #999">摘要</th>
+        <th style="padding:7px;border:1px solid #999">業者名</th><th style="padding:7px;border:1px solid #999">実行予算</th>
+        <th style="padding:7px;border:1px solid #999">実績金額</th><th style="padding:7px;border:1px solid #999">増減額</th>
+        <th style="padding:7px;border:1px solid #999">備考</th>
+      </tr>
+      ${seisanLines.map(l=>{const y=unFmt(l.yosan)||0,j=unFmt(l.jisseki)||0,d=j-y;return`<tr>
+        <td style="padding:6px;border:1px solid #ddd">${escHtml(l.himoku||'')}</td>
+        <td style="padding:6px;border:1px solid #ddd">${escHtml(l.tekiyo||'')}</td>
+        <td style="padding:6px;border:1px solid #ddd">${escHtml(l.gyosha||'')}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right">${fmt(y)}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right">${fmt(j)}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right;color:${d<=0?'green':'red'}">${fmt(d)}</td>
+        <td style="padding:6px;border:1px solid #ddd">${escHtml(l.biko||'')}</td>
+      </tr>`}).join('')}
+      <tr style="background:#f0f8e8;font-weight:bold">
+        <td colspan="3" style="padding:7px;border:1px solid #999;text-align:right">合計</td>
+        <td style="padding:7px;border:1px solid #999;text-align:right">${fmt(yTotal)}</td>
+        <td style="padding:7px;border:1px solid #999;text-align:right">${fmt(jTotal)}</td>
+        <td style="padding:7px;border:1px solid #999;text-align:right;color:${jTotal-yTotal<=0?'green':'red'}">${fmt(jTotal-yTotal)}</td>
+        <td></td>
+      </tr>
+    </table>
+    ${document.getElementById('s-note').value?'<p style="margin-top:10px">特記事項：'+escHtml(document.getElementById('s-note').value)+'</p>':''}`
+  );
+  openPrint(html);
+}
+
+// ===== 設定・社員マスタ =====
+function getEmployees(){try{return JSON.parse(localStorage.getItem('employees')||'[]')}catch{return[]}}
+function setEmployees(arr){localStorage.setItem('employees',JSON.stringify(arr))}
+function getApproverSettings(){try{return JSON.parse(localStorage.getItem('approver_settings')||'{}')}catch{return{}}}
+function setApproverSettings(obj){localStorage.setItem('approver_settings',JSON.stringify(obj))}
+function getCurrentUser(){
+  const id=localStorage.getItem('current_user_id');
+  if(!id) return null;
+  return getEmployees().find(e=>e.id===id)||null;
+}
+function setCurrentUserId(id){localStorage.setItem('current_user_id',id||'')}
+
+function renderEmployeeTable(){
+  const emps=getEmployees();
+  const tbody=document.getElementById('employee-tbody');
+  if(!tbody) return;
+  if(emps.length===0){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">社員が登録されていません</td></tr>';return}
+  tbody.innerHTML=emps.map((e,i)=>`<tr>
+    <td><strong>${escHtml(e.name)}</strong></td>
+    <td>${escHtml(e.role||'')}</td>
+    <td>${escHtml(e.email||'')}</td>
+    <td><span style="color:#aaa;font-size:12px">${e.password?'●●●●●●':'（未設定）'}</span></td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-light btn-sm" onclick="openEmployeeModal('${e.id}')">編集</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteEmployee('${e.id}')">削除</button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderApproverSettings(){
+  const tbody=document.getElementById('approver-setting-tbody');
+  if(!tbody) return;
+  const emps=getEmployees();
+  const settings=getApproverSettings();
+  const docTypes=[
+    {key:'yosan',label:'実行予算書',desc:'実行予算書の最終承認者'},
+    {key:'mitsumori',label:'見積書',desc:'見積書の承認者'},
+    {key:'gaichuu',label:'外注依頼書',desc:'外注依頼の承認者'},
+    {key:'chumon',label:'注文書',desc:'注文書の承認者'},
+    {key:'genka',label:'原価管理',desc:'原価管理表の承認者'},
+    {key:'seisan',label:'精算書',desc:'精算書の最終承認者'},
+  ];
+  const empOptions=emps.map(e=>`<option value="${e.id}">${escHtml(e.name)}（${escHtml(e.role||'')}）</option>`).join('');
+  tbody.innerHTML=docTypes.map(dt=>`<tr>
+    <td><strong>${dt.label}</strong></td>
+    <td>
+      <select id="apv-setting-${dt.key}" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;min-width:180px">
+        <option value="">（承認者なし）</option>
+        ${empOptions}
+      </select>
+    </td>
+    <td style="font-size:12px;color:#888">${dt.desc}</td>
+  </tr>`).join('');
+  docTypes.forEach(dt=>{
+    const sel=document.getElementById('apv-setting-'+dt.key);
+    if(sel&&settings[dt.key]) sel.value=settings[dt.key];
+  });
+}
+
+function renderCurrentUserSelect(){
+  const sel=document.getElementById('current-user-sel');
+  if(!sel) return;
+  const emps=getEmployees();
+  const curId=localStorage.getItem('current_user_id')||'';
+  sel.innerHTML='<option value="">-- ユーザーを選択 --</option>'+emps.map(e=>`<option value="${e.id}"${e.id===curId?' selected':''}>${escHtml(e.name)}（${escHtml(e.role||'')}）</option>`).join('');
+  updateCurrentUserInfo();
+}
+
+function onCurrentUserChange(){
+  const sel=document.getElementById('current-user-sel');
+  setCurrentUserId(sel.value);
+  updateCurrentUserInfo();
+}
+
+function updateCurrentUserInfo(){
+  const infoEl=document.getElementById('current-user-info');
+  if(!infoEl) return;
+  const user=getCurrentUser();
+  if(user){
+    infoEl.innerHTML=`<div style="font-weight:bold;color:var(--primary)">${escHtml(user.name)}</div><div style="color:#888;font-size:12px">${escHtml(user.role||'')}${user.email?'　'+escHtml(user.email):''}</div>`;
+  } else {
+    infoEl.innerHTML='<span style="color:#aaa;font-size:12px">ユーザー未選択</span>';
+  }
+}
+
+function renderSettingsPage(){
+  renderCurrentUserSelect();
+  renderEmployeeTable();
+  renderApproverSettings();
+}
+
+function openEmployeeModal(id){
+  const edit=id?getEmployees().find(e=>e.id===id):null;
+  document.getElementById('emp-modal-title').textContent=edit?'社員編集':'社員追加';
+  document.getElementById('emp-edit-id').value=id||'';
+  document.getElementById('emp-name').value=edit?edit.name:'';
+  document.getElementById('emp-role').value=edit?(edit.role||''):'';
+  document.getElementById('emp-email').value=edit?(edit.email||''):'';
+  document.getElementById('emp-password').value=edit?(edit.password||''):'';
+  document.getElementById('modal-employee').classList.add('open');
+}
+
+function saveEmployee(){
+  const name=document.getElementById('emp-name').value.trim();
+  if(!name){alert('氏名は必須です');return}
+  const emps=getEmployees();
+  const editId=document.getElementById('emp-edit-id').value;
+  const data={
+    id:editId||genId(),
+    name,
+    role:document.getElementById('emp-role').value,
+    email:document.getElementById('emp-email').value,
+    password:document.getElementById('emp-password').value
+  };
+  if(editId){const idx=emps.findIndex(e=>e.id===editId);if(idx>=0)emps[idx]=data;}
+  else emps.push(data);
+  setEmployees(emps);
+  closeModal('modal-employee');
+  renderSettingsPage();
+}
+
+function deleteEmployee(id){
+  if(!confirm('この社員を削除しますか？')) return;
+  setEmployees(getEmployees().filter(e=>e.id!==id));
+  if(localStorage.getItem('current_user_id')===id) setCurrentUserId('');
+  renderSettingsPage();
+}
+
+function toggleEmpPwd(){
+  const inp=document.getElementById('emp-password');
+  inp.type=inp.type==='password'?'text':'password';
+}
+
+function saveApproverSettings(){
+  const keys=['yosan','mitsumori','gaichuu','chumon','genka','seisan'];
+  const settings={};
+  keys.forEach(k=>{
+    const sel=document.getElementById('apv-setting-'+k);
+    if(sel) settings[k]=sel.value;
+  });
+  setApproverSettings(settings);
+  alert('承認者設定を保存しました');
+}
+
+function getApproverNameForDoc(docType){
+  const settings=getApproverSettings();
+  const empId=settings[docType];
+  if(!empId) return '';
+  const emp=getEmployees().find(e=>e.id===empId);
+  return emp?emp.name:'';
+}
+
+// ===== パスワード認証 =====
+let _pwdCallback=null;
+
+function requirePasswordFor(docType,callback){
+  const settings=getApproverSettings();
+  const empId=settings[docType];
+  if(!empId){callback();return;}
+  const emp=getEmployees().find(e=>e.id===empId);
+  if(!emp||!emp.password){callback();return;}
+  _pwdCallback=callback;
+  document.getElementById('pwd-check-info').innerHTML=`<strong>${escHtml(emp.name)}</strong>（${escHtml(emp.role||'')}）のパスワードを入力してください`;
+  document.getElementById('pwd-check-input').value='';
+  document.getElementById('pwd-check-error').style.display='none';
+  document.getElementById('modal-pwd-check').classList.add('open');
+  setTimeout(()=>document.getElementById('pwd-check-input').focus(),100);
+}
+
+function confirmPwdCheck(){
+  const input=document.getElementById('pwd-check-input').value;
+  const settings=getApproverSettings();
+  const empId=settings[_apvDocType];
+  const emp=empId?getEmployees().find(e=>e.id===empId):null;
+  if(emp&&emp.password&&input!==emp.password){
+    document.getElementById('pwd-check-error').style.display='block';
+    document.getElementById('pwd-check-input').focus();
+    return;
+  }
+  closeModal('modal-pwd-check');
+  if(_pwdCallback){_pwdCallback();_pwdCallback=null;}
+}
+
+function cancelPwdCheck(){
+  closeModal('modal-pwd-check');
+  _pwdCallback=null;
+}
+
+
+// ===== 初期化 =====
+currentViewYear=getCurrentFiscalYear();
+renderDashboard();
+renderKojiList();
+populateKojiSelects();
+// ナビバーにログインユーザー名を表示
+(function(){
+  const user=getCurrentUser();
+  if(user){
+    const nav=document.getElementById('top-nav');
+    const span=document.createElement('span');
+    span.id='nav-user-label';
+    span.style.cssText='font-size:12px;color:rgba(255,255,255,.8);white-space:nowrap;cursor:pointer';
+    span.textContent='👤 '+user.name;
+    span.onclick=function(){showPage('settings',{target:document.querySelector('.nav-btn:last-child')});};
+    nav.querySelector('div[style*="margin-left:auto"]').prepend(span);
+  }
+})();
+
+// ===== データ エクスポート / インポート =====
+function exportData(){
+  const keys=['koji','mitsumori','gaichuu','chumon'];
+  const data={_version:2,_exported:new Date().toISOString(),_system:'工事管理システム'};
+  data._employees=getEmployees();
+  data._approver_settings=getApproverSettings();
+  keys.forEach(k=>{data[k]=DB.get(k)});
+  const kojiList=DB.get('koji');
+  data._details={};
+  kojiList.forEach(k=>{
+    const d={};
+    const yosan=localStorage.getItem('yosan_'+k.id);
+    const genka=localStorage.getItem('genka_'+k.id);
+    const seisan=localStorage.getItem('seisan_'+k.id);
+    const corins=localStorage.getItem('corins_'+k.id);
+    if(yosan) d.yosan=JSON.parse(yosan);
+    if(genka) d.genka=JSON.parse(genka);
+    if(seisan) d.seisan=JSON.parse(seisan);
+    if(corins){
+      try{
+        const arr=JSON.parse(corins);
+        d.corins_meta=arr.map(function(c){
+          return typeof c==='object'?{name:c.name,regDate:c.regDate}:{name:'file'};
+        });
+      }catch(e){}
+    }
+    if(k.awards&&k.awards.length>0){
+      d.award_meta=k.awards.map(function(a){
+        return{id:a.id,name:a.name,hasPdf:!!localStorage.getItem('award_pdf_'+k.id+'_'+a.id)};
+      });
+    }
+    const apvData=localStorage.getItem('approval_'+k.id);
+    if(apvData) d.approval=JSON.parse(apvData);
+    data._details[k.id]=d;
+  });
+  const json=JSON.stringify(data,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const now=new Date();
+  const stamp=now.getFullYear()+('0'+(now.getMonth()+1)).slice(-2)+('0'+now.getDate()).slice(-2)+'_'+('0'+now.getHours()).slice(-2)+('0'+now.getMinutes()).slice(-2);
+  a.href=url;
+  a.download='工事管理データ_'+stamp+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('データを保存しました。\nNASの共有フォルダに移動してください。');
+}
+
+function importData(input){
+  const file=input.files[0];
+  if(!file) return;
+  if(!confirm('現在のデータをすべて上書きします。\nよろしいですか？\n\n※先に「データ保存」で現在のデータをバックアップすることをお勧めします。')){
+    input.value='';return;
+  }
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data._system||data._system!=='工事管理システム'){
+        alert('このシステム用のデータファイルではありません。');return;
+      }
+      ['koji','mitsumori','gaichuu','chumon'].forEach(function(k){
+        if(data[k]) DB.set(k,data[k]);
+      });
+      if(data._employees) setEmployees(data._employees);
+      if(data._approver_settings) setApproverSettings(data._approver_settings);
+      if(data._details){
+        Object.keys(data._details).forEach(function(id){
+          const d=data._details[id];
+          if(d.yosan) localStorage.setItem('yosan_'+id,JSON.stringify(d.yosan));
+          if(d.genka) localStorage.setItem('genka_'+id,JSON.stringify(d.genka));
+          if(d.seisan) localStorage.setItem('seisan_'+id,JSON.stringify(d.seisan));
+          if(d.approval) localStorage.setItem('approval_'+id,JSON.stringify(d.approval));
+        });
+      }
+      alert('データを読み込みました。\nエクスポート日時：'+data._exported);
+      location.reload();
+    }catch(err){
+      alert('ファイルの読み込みに失敗しました。\n正しいJSONファイルか確認してください。');
+    }
+  };
+  reader.readAsText(file,'UTF-8');
+  input.value='';
+}
+</script>
+</body>
+</html>
